@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { motion, useInView } from "framer-motion";
-import MissionHeroContent from './MissionHeroContent';
-import MissionMediaContent from './MissionMediaContent';
+import MissionHeroContent from './missionherocontent';
+import MissionMediaContent from './missionmediacontent';
 import "slick-carousel/slick/slick.css"; // Ensure Slick CSS is here
 import "slick-carousel/slick/slick-theme.css";
 
