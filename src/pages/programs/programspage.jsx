@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import RadioSection from "./RadioSection";
+import RadioSection from "./radiosection";
 import WorkshopSection from "./content_library";
-import VideoModal from "./VideoModal";
-import HeroSection from "./Herosection";
+import VideoModal from "./videomodal";
+import HeroSection from "./herosection";
 
 const ProgramsPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
