@@ -1,76 +1,67 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Link } from 'react-router-dom';
+// app/src/pages/BlogPage.jsx
+import React, { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Link } from "react-router-dom";
+import { client, urlFor } from "../client"; // <-- 1. IMPORT SANITY
 
+// 2. We keep your static header messages
 const headerMessages = [
   "Discover Spiritual Wisdom",
   "Journey to Inner Peace",
   "Insights for Wellness",
 ];
 
-const blogPosts = [
-  {
-    id: 1,
-    title: "Embracing Mindfulness in Daily Life",
-    excerpt: "Learn how to integrate mindfulness practices into your routine to foster peace and clarity amidst the chaos of everyday life.",
-    slug: "embracing-mindfulness",
-    imageUrl: "https://elohee.org/wp-content/uploads/2025/04/image_5b3cb4f6041283aface23c0db6b086c9-scaled.jpg",
-  },
-  {
-    id: 2,
-    title: "The Power of Breathwork for Healing",
-    excerpt: "Explore the transformative effects of breathwork and how it can release stress and unlock your body's natural energy flow.",
-    slug: "power-of-breathwork",
-    imageUrl: "https://www.shutterstock.com/image-photo/experience-serene-beauty-yoga-on-260nw-2455852459.jpg",
-  },
-  {
-    id: 3,
-    title: "Finding Balance Through Guided Meditation",
-    excerpt: "Discover the benefits of guided meditation to achieve emotional balance and spiritual awakening in this insightful post.",
-    slug: "guided-meditation",
-    imageUrl: "https://www.shutterstock.com/image-vector/spiritual-therapy-body-mind-harmony-260nw-1852509394.jpg",
-  },
-  {
-    id: 4,
-    title: "The Art of Spiritual Clarity",
-    excerpt: "Uncover practical wisdom to ground your spirit and illuminate your path towards a more meaningful life.",
-    slug: "spiritual-clarity",
-    imageUrl: "https://nandinibali.com/storage/images/page/hero_image/B0002506_cr.jpg",
-  },
-  {
-    id: 5,
-    title: "Harnessing Energy for Inner Healing",
-    excerpt: "Dive into the techniques of energy work and heart-centered awareness to foster deep emotional healing.",
-    slug: "inner-healing",
-    imageUrl: "https://www.shutterstock.com/image-photo/yoga-meditation-outdoors-glowing-seven-260nw-2359553275.jpg",
-  },
-  {
-    id: 6,
-    title: "The Journey to Self-Discovery",
-    excerpt: "Join Marina on a journey of self-discovery through holistic practices that nurture mind, body, and soul.",
-    slug: "self-discovery",
-    imageUrl: "https://blogs.chapman.edu/wp-content/uploads/sites/31/2020/03/meditation-1024x636-740x410.jpg",
-  },
-];
+// 3. We define a simple query for ONLY the posts
+const postQuery = `*[_type == "post"] | order(_createdAt desc) {
+  _id,
+  title,
+  excerpt,
+  mainImage,
+  "slug": slug.current
+}`;
+
+// 4. We DELETE the static 'blogPosts' array
+// const blogPosts = [ ... ];
 
 const BlogPage = () => {
   const [headerIndex, setHeaderIndex] = useState(0);
 
+  // --- 5. NEW STATE FOR DYNAMIC DATA ---
+  const [posts, setPosts] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  // ------------------------------------
+
+  // This is your original static animation, it's perfect
   useEffect(() => {
     const interval = setInterval(() => {
-      setHeaderIndex((prevIndex) => (prevIndex + 1) % headerMessages.length);
+      setHeaderIndex((prev) => (prev + 1) % headerMessages.length);
     }, 5000);
     return () => clearInterval(interval);
   }, []);
 
+  // --- 6. NEW EFFECT TO FETCH DATA ---
+  useEffect(() => {
+    client
+      .fetch(postQuery)
+      .then((data) => {
+        setPosts(data);
+        setIsLoading(false);
+      })
+      .catch((err) => {
+        console.error("Failed to fetch blog posts:", err);
+        setError(err);
+        setIsLoading(false);
+      });
+  }, []); // Runs once on page load
+  // -----------------------------------
+
+  // Your original static variants, all perfect
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
-      transition: {
-        staggerChildren: 0.15,
-        delayChildren: 0.3,
-      },
+      transition: { staggerChildren: 0.15, delayChildren: 0.2 },
     },
   };
 
@@ -81,91 +72,138 @@ const BlogPage = () => {
 
   const cardHover = {
     scale: 1.03,
-    y: -5,
-    boxShadow: "0 10px 20px rgba(236, 72, 153, 0.3)",
-    transition: { type: "spring", stiffness: 300 },
+    y: -6,
+    boxShadow: "0 12px 25px rgba(236, 72, 153, 0.25)",
+    transition: { type: "spring", stiffness: 260 },
   };
 
+  // --- 7. HELPER COMPONENT FOR THE GRID ---
+  // This lets us show the static page layout *while*
+  // the grid area handles its own loading/error states.
+  const renderBlogGrid = () => {
+    if (isLoading) {
+      return (
+        <div className="text-center text-lg text-rose-800">
+          Loading posts...
+        </div>
+      );
+    }
+
+    if (error) {
+      return (
+        <div className="text-center p-6 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+          <strong>Error:</strong> Failed to load posts. Please try again later.
+        </div>
+      );
+    }
+
+    if (posts.length === 0) {
+      return (
+        <div className="text-center text-lg text-gray-700">
+          No posts found.
+        </div>
+      );
+    }
+
+    // This is the "Success" state
+    return (
+      <motion.div
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8"
+        variants={containerVariants}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.15 }}
+      >
+        {posts.map((post) => (
+          <motion.div
+            key={post._id} // <-- Use Sanity's unique _id
+            className="group bg-white/70 backdrop-blur-lg border border-pink-100 rounded-3xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300"
+            variants={itemVariants}
+            whileHover={cardHover}
+          >
+            <div className="relative h-56 md:h-64 overflow-hidden">
+              <img
+                // 8. "BULLETPROOF" IMAGE LOADING (as promised)
+                src={
+                  post.mainImage
+                    ? urlFor(post.mainImage).width(500).height(400).fit("crop").url()
+                    : "https://via.placeholder.com/500x400?text=Missing+Image"
+                }
+                alt={post.title || "Blog post image"}
+                loading="lazy" // <-- LAZY LOADING (as promised)
+                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+              />
+            </div>
+            <div className="p-6 md:p-8">
+              <h3 className="text-2xl font-semibold font-['Playfair_Display'] text-rose-900 mb-3 leading-snug">
+                {/* 9. "BULLETPROOF" TEXT (as promised) */}
+                {post.title || "Untitled Post"}
+              </h3>
+              <p className="text-gray-700 text-base leading-relaxed mb-6">
+                {post.excerpt || "No summary available."}
+              </p>
+              <Link to={`/blog/${post.slug || post._id}`}>
+                <motion.button
+                  className="w-full py-3 bg-rose-300 text-white rounded-xl shadow-md font-medium text-base hover:from-rose-700 hover:to-pink-700 transition-all"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  Read More
+                </motion.button>
+              </Link>
+            </div>
+          </motion.div>
+        ))}
+      </motion.div>
+    );
+  };
+  
+  // --- RENDER FUNCTION ---
+  // This layout is all static and will load instantly
   return (
-    <div className="font-sans bg-gradient-to-b from-pink-200 via-rose-200 to-pink-300 min-h-screen w-full">
-      {/* ENHANCED FULL-WIDTH DYNAMIC HEADER */}
-      <div 
-        className="relative w-full py-20 sm:py-28 md:py-36 lg:py-48 text-white text-center overflow-hidden bg-cover bg-center bg-fixed"
+    <div className="font-sans bg-gradient-to-br from-rose-50 via-pink-50 to-white min-h-screen w-full">
+      {/* ✨ HEADER SECTION (Your original static code) */}
+      <header
+        className="relative w-full py-28 md:py-36 text-white text-center bg-cover bg-center overflow-hidden"
         style={{
-          backgroundImage: `url('https://images.pexels.com/photos/374754/pexels-photo-374754.jpeg?auto=format&fit=crop&q=80&w=1920&h=600')`,
+          backgroundImage:
+            "url('https://images.pexels.com/photos/374754/pexels-photo-374754.jpeg?auto=format&fit=crop&q=80&w=1920&h=700')",
         }}
       >
-        <div className="absolute inset-0 bg-gradient-to-b from-rose-700/60 to-rose-900/40 backdrop-blur-sm"></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-rose-800/70 via-rose-900/60 to-rose-950/80"></div>
 
-        <motion.div className="relative z-10 px-4">
+        <div className="relative z-10 px-6">
           <motion.h1
-            className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-['Playfair_Display'] font-extrabold mb-6 tracking-wide drop-shadow-2xl"
-            initial={{ opacity: 0, y: -40, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 1.0, type: "spring", damping: 12 }}
-            whileHover={{ scale: 1.02, textShadow: "0 0 15px rgba(255,255,255,0.9)" }}
+            className="text-4xl sm:text-5xl md:text-6xl font-['Playfair_Display'] font-extrabold mb-5 tracking-wide"
+            initial={{ opacity: 0, y: -30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.9 }}
           >
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-white to-pink-300">Insights & Inspirations</span>
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-white to-pink-200">
+              Insights & Inspirations
+            </span>
           </motion.h1>
 
           <AnimatePresence mode="wait">
-            <motion.h3
+            <motion.p
               key={headerIndex}
-              className="text-base sm:text-lg md:text-xl lg:text-2xl font-light italic text-white/90 max-w-3xl md:max-w-4xl mx-auto"
-              initial={{ opacity: 0, y: 30 }}
+              className="text-base sm:text-lg md:text-xl font-light italic text-white/90"
+              initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -30 }}
-              transition={{ duration: 0.7, ease: 'easeInOut' }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.7 }}
             >
               {headerMessages[headerIndex]}
-            </motion.h3>
+            </motion.p>
           </AnimatePresence>
-          <div className='h-6 sm:h-8 md:h-10'></div>
-        </motion.div>
-      </div>
+        </div>
+      </header>
 
-      {/* BLOG POSTS SECTION */}
-      <section className="py-16 sm:py-24 md:py-28 -mt-8 sm:-mt-12 relative z-20">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
-          <motion.div
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8"
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: false, amount: 0.2 }}
-            variants={containerVariants}
-          >
-            {blogPosts.map((post) => (
-              <motion.div
-                key={post.id}
-                className="p-4 sm:p-6 rounded-2xl bg-white/25 backdrop-blur-lg shadow-lg border border-white/30 hover:border-pink-400/50 transition-all duration-300 overflow-hidden"
-                variants={itemVariants}
-                whileHover={cardHover}
-              >
-                <div className="relative w-full h-48 sm:h-56 md:h-64 overflow-hidden rounded-xl mb-4">
-                  <img
-                    src={post.imageUrl}
-                    alt={post.title}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                  />
-                </div>
-                <h3 className="text-lg sm:text-xl md:text-2xl font-['Playfair_Display'] font-semibold text-rose-900 mb-3 tracking-tight">
-                  {post.title}
-                </h3>
-                <p className="text-gray-800 text-sm sm:text-base leading-relaxed mb-4">
-                  {post.excerpt}
-                </p>
-                <Link to={`/blog/${post.slug}`}>
-                  <motion.button
-                    className="w-full py-2 sm:py-3 ${ACCENT_COLOR_CLASS} text-white rounded-xl shadow-md font-medium text-sm sm:text-base hover:from-pink-700 hover:to-rose-700 transition-all duration-300"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    Read More
-                  </motion.button>
-                </Link>
-              </motion.div>
-            ))}
-          </motion.div>
+      {/* ✨ BLOG GRID SECTION */}
+      <section className="py-20 sm:py-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* 10. We call our new helper function here */}
+          {renderBlogGrid()}
         </div>
       </section>
     </div>

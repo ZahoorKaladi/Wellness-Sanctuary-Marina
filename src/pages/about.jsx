@@ -1,278 +1,372 @@
-import React, { useState, useEffect } from 'react';
+// app/src/pages/AboutPage.jsx
+import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { Mic, Video, Heart, Sparkles, Zap, Feather } from 'lucide-react';
+import { client, urlFor } from '../client'; // <-- 1. IMPORT SANITY
 
-const headerMessages = [
-  "Spiritual Master & Wellness Guide",
-  "Guiding You to Inner Peace",
-  "Healing Mind, Body, and Soul",
+// 2. We keep your static header messages as a FALLBACK
+const staticHeaderMessages = [
+  'Spiritual Master & Wellness Guide',
+  'Guiding You to Inner Peace',
+  'Healing Mind, Body & Soul',
 ];
+
+// 3. We define a single, simple query to get all page content
+const query = `*[_type == "aboutPage"][0]`;
+
+// 4. We DELETE the static 'radioCareerHighlights' array
+// const radioCareerHighlights = [ ... ];
+
+// Your static FeatureCard component is perfect and UNCHANGED
+const FeatureCard = ({ Icon, title, desc, delay }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 18 }}
+    whileInView={{ opacity: 1, y: 0 }}
+    viewport={{ once: true, amount: 0.2 }}
+    transition={{ duration: 0.7, delay }}
+    whileHover={{ scale: 1.03, translateY: -6 }}
+    className="relative overflow-hidden rounded-2xl p-6 sm:p-8 bg-white/18 backdrop-blur-md border border-white/10 shadow-lg"
+  >
+    <div className="flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-br from-rose-400/40 to-pink-500/20 mb-4">
+      <Icon size={26} className="text-rose-800" />
+    </div>
+    <h3 className="text-lg sm:text-xl font-semibold text-rose-900 mb-2">{title}</h3>
+    <p className="text-sm text-rose-700 leading-relaxed">{desc}</p>
+    <motion.div
+      initial={{ opacity: 0, x: -50 }}
+      whileHover={{ opacity: 0.06, x: 0 }}
+      transition={{ duration: 0.6 }}
+      className="pointer-events-none absolute inset-0 bg-gradient-to-r from-white to-transparent mix-blend-screen"
+    />
+  </motion.div>
+);
 
 const AboutPage = () => {
   const [headerIndex, setHeaderIndex] = useState(0);
 
+  // --- 5. ADD STATE FOR DYNAMIC DATA ---
+  const [data, setData] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  // We won't add an error state, to keep the page static-first
+  // If data fails to load, it will just show the original static text
+  
+  // --- 6. DERIVE DYNAMIC CONTENT WITH FALLBACKS (The Bulletproof part) ---
+  const headerMessages = data?.headerTaglines || staticHeaderMessages;
+  const radioHighlights = data?.radioHighlights || []; // Default to empty array
+  const pageData = data || {}; // Default to empty object
+
+  // 7. This useEffect fetches the data
   useEffect(() => {
-    const interval = setInterval(() => {
-      setHeaderIndex((prevIndex) => (prevIndex + 1) % headerMessages.length);
-    }, 5000);
-    return () => clearInterval(interval);
+    client
+      .fetch(query)
+      .then((fetchedData) => {
+        setData(fetchedData);
+        setIsLoading(false);
+      })
+      .catch((err) => {
+        console.error("Failed to fetch About Page data:", err);
+        setIsLoading(false); // Let the page render with static fallbacks
+      });
   }, []);
 
-  const containerVariants = {
-    hidden: { opacity: 0, y: 50 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: 'easeOut' } },
-  };
+  // Your original header animation hook is perfect
+  useEffect(() => {
+    const t = setInterval(() => setHeaderIndex((i) => (i + 1) % headerMessages.length), 4800);
+    return () => clearInterval(t);
+  }, [headerMessages]); // It now safely depends on the (dynamic or static) headerMessages
 
-  const staggerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.15,
-      },
-    },
-  };
-
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: { y: 0, opacity: 1 },
-  };
-
-  const cardHover = {
-    scale: 1.03,
-    y: -5,
-    boxShadow: "0 10px 20px rgba(236, 72, 153, 0.4)",
-    transition: { type: "spring", stiffness: 300 },
-  };
-
-  const profileImageVariants = {
-    hidden: { opacity: 0, scale: 0.8, rotate: -10 },
-    visible: { 
-      opacity: 1, 
-      scale: 1, 
-      rotate: 0,
-      transition: { 
-        duration: 1.2, 
-        type: "spring", 
-        damping: 10,
-        stiffness: 80 
-      }
-    },
-    hover: { 
-      scale: 1.05, 
-      rotate: 2,
-      boxShadow: "0 15px 40px rgba(236, 72, 153, 0.5)",
-      transition: { duration: 0.4 }
-    }
-  };
+  // Your static particles are perfect
+  const particles = [
+    { id: 1, size: 90, x: 10, y: 8, delay: 0 },
+    { id: 2, size: 60, x: 80, y: 14, delay: 1.2 },
+    { id: 3, size: 40, x: 40, y: 72, delay: 0.6 },
+  ];
 
   return (
-    <div className="font-sans bg-gradient-to-b from-pink-200 via-rose-200 to-pink-300 min-h-screen w-full">
+    <div className="min-h-screen w-full font-inter bg-gradient-to-b from-rose-50 via-pink-50 to-rose-100 text-rose-900">
       
-      {/* ENHANCED FULL-WIDTH DYNAMIC HEADER WITH SUBTLE PARALLAX AND GRADIENT OVERLAY */}
-      <div 
-        className="relative w-full py-20 sm:py-28 md:py-36 lg:py-48 text-white text-center overflow-hidden bg-cover bg-center bg-fixed"
-        style={{
-          backgroundImage: `url('https://images.pexels.com/photos/374754/pexels-photo-374754.jpeg?auto=format&fit=crop&q=80&w=1920&h=600')`,
-        }}
-      >
-        <div className="absolute inset-0 bg-gradient-to-b from-rose-700/60 to-rose-900/40 backdrop-blur-sm"></div>
+      {/* HERO (Now hybrid - static design, dynamic text) */}
+      <header className="relative w-full overflow-hidden">
+        {/* All your static backgrounds and particles are unchanged */}
+        <div
+          className="absolute inset-0 bg-cover bg-center bg-fixed filter saturate-110"
+          style={{
+            backgroundImage:
+              "url('https://images.pexels.com/photos/374754/pexels-photo-374754.jpeg?auto=format&fit=crop&q=90&w=1920&h=900')",
+          }}
+          aria-hidden
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-rose-900/45 via-rose-800/35 to-transparent mix-blend-multiply" />
+        <div className="absolute inset-0 bg-gradient-to-t from-white/10 to-transparent backdrop-blur-sm" />
+        {particles.map((p) => (
+          <motion.div
+            key={p.id}
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: [0, 0.28, 0.06], y: [0, -6, 0], scale: [1, 1.06, 1] }}
+            transition={{ repeat: Infinity, duration: 6 + p.delay, delay: p.delay }}
+            className="absolute rounded-full bg-gradient-to-br from-pink-300/40 to-rose-500/20 blur-3xl"
+            style={{ width: p.size, height: p.size, left: `${p.x}%`, top: `${p.y}%` }}
+          />
+        ))}
 
-        <motion.div className="relative z-10 px-4">
+        <div className="relative z-10 max-w-6xl mx-auto px-6 py-28 sm:py-36 lg:py-44 text-center">
           <motion.h1
-            className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-['Playfair_Display'] font-extrabold mb-6 tracking-wide drop-shadow-2xl"
-            initial={{ opacity: 0, y: -40, scale: 0.95 }}
+            initial={{ opacity: 0, y: -18, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 1.0, type: "spring", damping: 12 }}
-            whileHover={{ scale: 1.02, textShadow: "0 0 15px rgba(255,255,255,0.9)" }}
+            transition={{ duration: 0.9, ease: 'easeOut' }}
+            className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-['Playfair_Display'] font-extrabold tracking-tight leading-tight text-white"
           >
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-white to-pink-300">The Heart Behind the Healing</span>
+            {/* This title is static, as requested */}
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-rose-100 via-pink-200 to-white">The Heart Behind the Healing</span>
           </motion.h1>
 
           <AnimatePresence mode="wait">
             <motion.h3
               key={headerIndex}
-              className="text-base sm:text-lg md:text-xl lg:text-2xl font-light italic text-white/90 max-w-3xl md:max-w-4xl mx-auto"
-              initial={{ opacity: 0, y: 30 }}
+              initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -30 }}
-              transition={{ duration: 0.7, ease: 'easeInOut' }}
+              exit={{ opacity: 0, y: -12 }}
+              transition={{ duration: 0.6 }}
+              className="mt-4 text-md sm:text-lg md:text-xl text-rose-100/90 max-w-3xl mx-auto italic"
             >
+              {/* This text is now dynamic */}
               {headerMessages[headerIndex]}
             </motion.h3>
           </AnimatePresence>
-          <div className='h-6 sm:h-8 md:h-10'></div>
-        </motion.div>
-      </div>
-      
-      {/* PROFILE & MISSION SECTION WITH ENHANCED GLASSMORPHISM AND DARKER BACKDROP */}
-      <section className="py-16 sm:py-20 md:py-24 -mt-8 sm:-mt-12 relative z-20">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl">
+
+          {/* Static buttons */}
           <motion.div
-            className="p-8 sm:p-10 md:p-12 rounded-3xl bg-white/20 backdrop-blur-xl shadow-2xl border border-white/30"
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.2 }}
-            variants={containerVariants}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.0 }}
+            className="mt-8 flex justify-center gap-4"
           >
-            <div className="flex flex-col items-center text-center">
-              <motion.div 
-                className="relative mb-10 group"
-                variants={profileImageVariants}
-                initial="hidden"
-                whileInView="visible"
-                whileHover="hover"
-                viewport={{ once: true }}
-              >
-                <motion.img
-                  src="https://images.pexels.com/photos/6919996/pexels-photo-6919996.jpeg?auto=format&fit=crop&q=80&w=300&h=300"
-                  alt="Marina"
-                  className="w-48 h-48 sm:w-60 sm:h-60 md:w-72 md:h-72 rounded-full object-cover border-4 border-pink-200/80 group-hover:border-pink-400 transition-all duration-300"
-                />
-                <motion.div
-                  className="absolute inset-0 rounded-full bg-gradient-to-r from-pink-400/0 to-pink-600/0 group-hover:from-pink-400/25 group-hover:to-pink-600/25 opacity-0 group-hover:opacity-100 transition-all duration-500"
-                />
-              </motion.div>
-              
-              <motion.h2
-                className="text-3xl sm:text-4xl md:text-5xl font-['Playfair_Display'] text-rose-900 mb-6 font-bold tracking-tight"
-                variants={itemVariants}
-              >
-                 <span className="bg-clip-text text-transparent bg-gradient-to-r from-white to-pink-300"><span className="text-rose-800">MARI</span><span className="text-pink-500">NA</span></span>
-                
-              </motion.h2>
-              
-              <motion.p
-                className="text-gray-800 text-sm sm:text-base md:text-lg leading-relaxed max-w-3xl italic"
-                variants={itemVariants}
-              >
-                Born in the majestic landscapes of Austria, Marina discovered her calling in <span className="font-semibold text-rose-800">spiritual guidance and holistic healing</span> at a young age. Her profound connection with nature and ancient wisdom traditions led her on a lifelong quest for inner mastery.
-              </motion.p>
-              
-              <motion.p
-                className="text-gray-800 text-sm sm:text-base md:text-lg leading-relaxed max-w-3xl mt-6 border-t border-pink-300/40 pt-6"
-                variants={itemVariants}
-              >
-                Today, she shares her transformative insights globally, blending <span className="font-semibold text-rose-800">Austrian alpine tranquility with deep spiritual wisdom</span>. Her guidance—delivered through captivating audio and video—is a journey to emotional balance, clarity, and true spiritual awakening.
-              </motion.p>
-            </div>
+            <Link
+              to="/sessionbooking"
+              className="relative inline-flex items-center gap-3 rounded-full px-8 py-3 bg-white/95 text-rose-800 font-semibold shadow-2xl border border-white/80 hover:scale-[1.02] transition-transform duration-300"
+            >
+              Book a Session
+            </Link>
+            <Link
+              to="/service"
+              className="inline-flex items-center gap-2 rounded-full px-6 py-2 bg-transparent border border-white/30 text-white/90 hover:bg-white/8 transition-colors"
+            >
+              Our Offerings
+            </Link>
           </motion.div>
         </div>
-      </section>
-      
-      {/* CORE OFFERINGS SECTION WITH DARKER GLASSMORPHISM CARDS */}
-      <section className="py-16 sm:py-20 md:py-24 bg-pink-200/70">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
-          <motion.h2
-            className="text-2xl sm:text-3xl md:text-4xl font-['Playfair_Display'] text-rose-900 mb-10 md:mb-14 text-center font-bold tracking-wide"
-            initial={{ opacity: 0, y: 50 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.5 }}
-            transition={{ duration: 0.8 }}
-          >
-            Marina's Pillars of Transformation
-          </motion.h2>
+      </header>
 
+      {/* PROFILE + MISSION (Now hybrid) */}
+      <section className="relative -mt-16 sm:-mt-20 z-20">
+        <div className="max-w-6xl mx-auto px-6">
           <motion.div
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8"
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.3 }}
-            variants={staggerVariants}
-          >
-            {[
-              { title: "Audio Therapies", icon: Mic, description: "Guided meditations and sound bath sessions to soothe the nervous system.", color: "pink-700" },
-              { title: "Video Journeys", icon: Video, description: "Visualizations for deep mindfulness and self-discovery practices.", color: "purple-700" },
-              { title: "Inner Healing", icon: Heart, description: "Focus on emotional release, energy work, and heart-centered awareness.", color: "red-700" },
-              { title: "Spiritual Clarity", icon: Sparkles, description: "Practical wisdom for grounding your spirit and illuminating your path.", color: "yellow-700" },
-            ].map((feature, index) => (
-              <motion.div 
-                key={index} 
-                className="p-6 sm:p-8 rounded-2xl bg-white/25 backdrop-blur-lg shadow-lg border border-white/20 hover:border-pink-500/50 transition-all duration-300 overflow-hidden"
-                variants={itemVariants}
-                whileHover={cardHover}
-              >
-                <div className="relative">
-                  <feature.icon size={40} className={`mx-auto mb-4 text-${feature.color} drop-shadow-lg`} />
-                  <div className="absolute inset-0 bg-gradient-to-t from-pink-200/30 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
-                </div>
-                <h3 className="text-lg sm:text-xl font-semibold text-rose-900 mb-3 tracking-tight">{feature.title}</h3>
-                <p className="text-gray-800 text-sm sm:text-base leading-relaxed">{feature.description}</p>
-              </motion.div>
-            ))}
-          </motion.div>
-        </div>
-      </section>
-
-      {/* IN-DEPTH JOURNEY SECTION WITH DARKER ACCORDION-LIKE ITEMS */}
-      <section className="py-16 sm:py-20 md:py-24">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl">
-          <motion.h2
-            className="text-2xl sm:text-3xl md:text-4xl font-['Playfair_Display'] text-rose-900 mb-10 md:mb-12 text-center font-bold tracking-wide"
-            initial={{ opacity: 0, y: 50 }}
+            className="bg-white/18 backdrop-blur-lg border border-white/10 rounded-3xl p-6 sm:p-10 shadow-2xl"
+            initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8 }}
           >
-            The Transformative Power
-          </motion.h2>
+            <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-12">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                whileHover={{ scale: 1.03 }}
+                transition={{ duration: 0.8 }}
+                className="relative"
+              >
+                <div className="rounded-full p-1 bg-gradient-to-br from-rose-400 to-pink-400 shadow-[0_30px_80px_rgba(236,72,153,0.12)]">
+                  <img
+                    // DYNAMIC PROFILE IMAGE
+                    src={
+                      pageData.profileImage
+                        ? urlFor(pageData.profileImage).width(300).height(300).fit('crop').url()
+                        : "https://images.pexels.com/photos/6919996/pexels-photo-6919996.jpeg?auto=format&fit=crop&q=90&w=600&h=600"
+                    }
+                    alt="Marina"
+                    className="w-44 h-44 sm:w-56 sm:h-56 md:w-64 md:h-64 rounded-full object-cover border-4 border-white/30"
+                  />
+                </div>
+                <div className="absolute left-1/2 transform -translate-x-1/2 bottom-[-18px] w-40 h-8 rounded-full blur-xl opacity-30 bg-white/30" />
+              </motion.div>
 
-          <motion.div 
-            className="space-y-8"
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.2 }}
-            variants={staggerVariants}
-          >
-            <motion.div className="flex items-start gap-4 sm:gap-5 p-5 sm:p-6 rounded-2xl bg-pink-200/40 border-l-8 border-rose-700/80 shadow-lg hover:shadow-xl transition-shadow duration-300" variants={itemVariants}>
-              <Zap size={24} className="text-rose-700 flex-shrink-0 mt-1" />
-              <div>
-                <h3 className="text-lg sm:text-xl font-semibold text-rose-900 mb-2 tracking-tight">Empowerment Through Breath</h3>
-                <p className="text-gray-800 text-sm sm:text-base leading-relaxed">Marina's signature <span className="font-semibold text-rose-800">breathwork techniques</span> are designed to release long-held stress and unlock your body's natural energy flow, leading to immediate emotional relief and mental clarity.</p>
+              <div className="flex-1 text-center lg:text-left">
+                <motion.h2
+                  initial={{ opacity: 0, y: 8 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8 }}
+                  className="text-3xl sm:text-4xl md:text-5xl font-['Playfair_Display'] font-extrabold text-rose-900"
+                >
+                  <span className="inline-block bg-clip-text text-transparent bg-gradient-to-r from-rose-900 via-pink-500 to-rose-700">MARI</span>
+                  <span className="inline-block ml-1 text-pink-500">NA</span>
+                </motion.h2>
+
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  whileInView={{ opacity: 1 }}
+                  transition={{ delay: 0.2, duration: 0.8 }}
+                  className="mt-4 text-sm sm:text-base text-rose-800 leading-relaxed max-w-2xl mx-auto lg:mx-0 italic"
+                >
+                  {/* DYNAMIC BIO TEXT */}
+                  {pageData.profileBio || "Since 2009, Marina's work at Campus & City Radio 94.4 St. Pölten has focused on fostering dialogue and human stories — building a foundation of trust, presence and impact. spiritual guidance & holistic healing at a young age. Her work combines ancient wisdom with modern practice to help you reclaim calm, clarity and presence."}
+                </motion.p>
+
+                {/* Static buttons */}
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  whileInView={{ opacity: 1 }}
+                  transition={{ delay: 0.35 }}
+                  className="mt-6 flex flex-col sm:flex-row items-center gap-3 justify-center lg:justify-start"
+                >
+                  <Link to="/programspage" className="text-sm px-4 py-2 rounded-full bg-rose-700/10 border border-rose-700/20 text-rose-900">Explore Programs</Link>
+                  <Link to="/contact" className="text-sm px-4 py-2 rounded-full bg-white/90 text-rose-800 shadow">Contact Marina</Link>
+                </motion.div>
               </div>
-            </motion.div>
-
-            <motion.div className="flex items-start gap-4 sm:gap-5 p-5 sm:p-6 rounded-2xl bg-pink-200/40 border-l-8 border-rose-700/80 shadow-lg hover:shadow-xl transition-shadow duration-300" variants={itemVariants}>
-              <Feather size={24} className="text-rose-700 flex-shrink-0 mt-1" />
-              <div>
-                <h3 className="text-lg sm:text-xl font-semibold text-rose-900 mb-2 tracking-tight">Visualizations for Lasting Change</h3>
-                <p className="text-gray-800 text-sm sm:text-base leading-relaxed">Utilizing the power of the subconscious mind, her <span className="font-semibold text-rose-800">guided visualizations</span> help you reprogram old patterns and manifest a life aligned with your highest self. Change starts from within.</p>
-              </div>
-            </motion.div>
-
-            <motion.p
-              className="text-gray-800 text-center text-sm sm:text-base md:text-lg leading-relaxed max-w-3xl mx-auto pt-6 italic"
-              variants={itemVariants}
-            >
-              Join her global community and take the next step on your path to self-discovery, where every guidance session is an investment in a more balanced, joyful, and deeply meaningful life.
-            </motion.p>
+            </div>
           </motion.div>
         </div>
       </section>
 
-      {/* CALL TO ACTION WITH ENHANCED GRADIENT BUTTON */}
-      <section className="bg-gradient-to-r from-rose-300 to-pink-300 text-white py-12 sm:py-16 md:py-20 text-center">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-['Playfair_Display'] mb-6 font-bold tracking-wide drop-shadow-xl">Ready to find your inner calm?</h2>
-          <p className="text-base sm:text-lg opacity-95 mb-8 md:mb-10 max-w-xl md:max-w-2xl mx-auto leading-relaxed">
-            Book a one-on-one session with Marina and experience personalized transformation.
+      {/* FEATURES GRID (Now hybrid - static icons, dynamic text) */}
+      <section className="py-16 sm:py-20">
+        <div className="max-w-7xl mx-auto px-6">
+          <motion.h3
+            initial={{ opacity: 0, y: 12 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="text-2xl sm:text-3xl font-['Playfair_Display'] text-rose-900 font-bold text-center mb-10"
+          >
+            Marina's Pillars of Transformation
+          </motion.h3>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <FeatureCard 
+              Icon={Mic} 
+              title={pageData.feature1?.title || "Audio Therapies"}
+              desc={pageData.feature1?.description || "Guided meditations and sound baths to soothe the nervous system."}
+              delay={0.05} 
+            />
+            <FeatureCard 
+              Icon={Video} 
+              title={pageData.feature2?.title || "Video Journeys"}
+              desc={pageData.feature2?.description || "Visualizations for deep mindfulness and self-discovery."}
+              delay={0.15} 
+            />
+            <FeatureCard 
+              Icon={Heart} 
+              title={pageData.feature3?.title || "Inner Healing"}
+              desc={pageData.feature3?.description || "Emotional release, energy work and heart-centered awareness."}
+              delay={0.25} 
+            />
+            <FeatureCard 
+              Icon={Sparkles} 
+              title={pageData.feature4?.title || "Spiritual Clarity"}
+              desc={pageData.feature4?.description || "Practical wisdom to ground your spirit and illuminate the path."}
+              delay={0.35} 
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* RADIO CAREER (Now hybrid - static title, dynamic content) */}
+      <section className="py-12 sm:py-16 bg-rose-50">
+        <div className="max-w-7xl mx-auto px-6">
+          <motion.h3
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="text-2xl sm:text-3xl text-rose-900 font-bold text-center mb-8"
+          >
+            A Credible Foundation: Broadcast & Radio
+          </motion.h3>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* DYNAMIC RADIO HIGHLIGHTS */}
+            {radioHighlights.map((r, idx) => (
+              <motion.article
+                key={idx} // Using 'idx' is okay here as the list is static
+                initial={{ opacity: 0, y: 10 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.08 * idx }}
+                className="p-6 rounded-xl bg-white shadow-xl border-t-4 border-rose-500"
+              >
+                <div className="text-4xl mb-3">{r.icon || '🎙️'}</div>
+                <h4 className="text-lg font-semibold text-rose-900">{r.title || "Untitled Program"}</h4>
+                <div className="text-sm font-medium text-rose-700 mt-2">{r.period || "Date TBD"}</div>
+                <p className="mt-3 text-sm text-rose-700 leading-relaxed">{r.description || "No description."}</p>
+              </motion.article>
+            ))}
+          </div>
+
+          <p className="mt-8 text-center text-sm text-rose-700 italic max-w-3xl mx-auto">
+            {/* DYNAMIC BIO TEXT (REUSED) */}
+            {pageData.profileBio || "Since 2009, Marina's work at Campus & City Radio 94.4 St. Pölten has focused on fostering dialogue and human stories — building a foundation of trust, presence and impact."}
           </p>
-          <motion.div
-            initial={{ scale: 1 }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            transition={{ type: "spring", stiffness: 400 }}
-          >
-            <Link
-              to="/sessionbooking"
-              className="inline-block px-8 sm:px-10 md:px-12 py-3 sm:py-4 bg-white/95 text-rose-800 rounded-full shadow-2xl font-bold tracking-wide transition-all duration-300 hover:bg-white hover:shadow-[0_0_30px_rgba(255,255,255,0.9)]"
-            >
-              Book Your Session Now
-            </Link>
-          </motion.div>
         </div>
       </section>
+
+      {/* IN-DEPTH JOURNEY (Now hybrid - static icons/title, dynamic text) */}
+      <section className="py-16 sm:py-20">
+        <div className="max-w-6xl mx-auto px-6">
+          <motion.h3 initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }} className="text-2xl sm:text-3xl font-bold text-center text-rose-900 mb-8">
+            The Transformative Power
+          </motion.h3>
+
+          <div className="space-y-6">
+            <motion.div className="flex items-start gap-4 p-5 rounded-2xl bg-white/14 border-l-8 border-rose-700 shadow-md" initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }}>
+              <Zap size={22} className="text-rose-700 mt-1" />
+              <div>
+                <h4 className="font-semibold text-rose-900">
+                  {pageData.journey1?.title || "Empowerment Through Breath"}
+                </h4>
+                <p className="text-sm text-rose-700 leading-relaxed">
+                  {pageData.journey1?.description || "Signature breathwork techniques designed to release held stress and unlock the body's natural flow — leading to immediate emotional relief and clarity."}
+                </p>
+              </div>
+            </motion.div>
+
+            <motion.div className="flex items-start gap-4 p-5 rounded-2xl bg-white/14 border-l-8 border-rose-700 shadow-md" initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.06 }}>
+              <Feather size={22} className="text-rose-700 mt-1" />
+              <div>
+                <h4 className="font-semibold text-rose-900">
+                  {pageData.journey2?.title || "Visualizations for Lasting Change"}
+                </h4>
+                <p className="text-sm text-rose-700 leading-relaxed">
+                  {pageData.journey2?.description || "Guided visualizations to reprogram old patterns and manifest a life aligned with your highest self — change starts within."}
+                </p>
+              </div>
+            </motion.div>
+
+            <motion.p initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} transition={{ duration: 0.7, delay: 0.12 }} className="text-center text-sm text-rose-700 italic">
+              {pageData.journeyFinalNote || "Join a global community and take the next step on your path toward balance, joy and deeper meaning."}
+            </motion.p>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA (Static) */}
+      <section className="py-12 sm:py-16 bg-gradient-to-r from-rose-300 to-pink-300 text-white">
+        <div className="max-w-5xl mx-auto px-6 text-center">
+          <motion.h3 initial={{ opacity: 0, y: 8 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }} className="text-2xl sm:text-3xl font-['Playfair_Display'] font-bold mb-4">Ready to find your inner calm?</motion.h3>
+          <p className="max-w-2xl mx-auto text-sm sm:text-base mb-6 opacity-95">Book a one-on-one session with Marina and experience a personalized transformation — intentional, supportive, and carefully guided.</p>
+          <div className="relative inline-block">
+            <motion.div
+              aria-hidden
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: [0.95, 1.06, 0.98], opacity: [0.08, 0.16, 0.06] }}
+              transition={{ repeat: Infinity, duration: 2.6 }}
+              className="absolute inset-0 rounded-full blur-3xl bg-gradient-to-r from-rose-400 to-pink-400 opacity-30"
+            />
+            <Link to="/sessionbooking" className="relative inline-flex items-center px-10 py-3 rounded-full bg-white/95 text-rose-900 font-semibold shadow-2xl border border-white/80">Book Your Session Now</Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer (Static) */}
+      <footer className="py-10 text-center text-sm text-rose-700">
+        © {new Date().getFullYear()} Marina — All rights reserved.
+      </footer>
     </div>
   );
 };

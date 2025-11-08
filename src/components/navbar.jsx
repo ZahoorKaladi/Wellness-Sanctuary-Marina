@@ -9,6 +9,7 @@ const NAV_ITEMS = [
   { name: 'About Us', to: '/about' },
   { name: 'Contact', to: '/contact' },
   { name: 'Articles', to: '/blog' },
+  { name: 'Services', to: '/service' },
 ];
 
 function Navbar() {

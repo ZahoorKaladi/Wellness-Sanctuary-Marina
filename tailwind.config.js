@@ -7,8 +7,8 @@ export default {
   theme: {
     extend: {
       // Add a custom font family (for font-poppins utility)
-      fontFamily: {
-        poppins: ['Poppins', 'sans-serif'],
+     fontFamily: {
+        poppins: ['Inter', 'sans-serif'],
       },
       // Add a new keyframe animation
       keyframes: {

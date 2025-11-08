@@ -1,71 +1,51 @@
-import React, { useState, useEffect, useRef } from "react";
-import { motion, useMotionValue, useTransform, useInView } from "framer-motion";
-import {
-  Sparkles,
-  Heart,
-  Mic,
-  Flower2,
-  Headphones,
-  HandHeart,
-} from "lucide-react";
+import React, { useRef } from "react";
+import { motion, useInView } from "framer-motion";
+import { Sparkles, Heart, Mic, Flower2, Headphones, HandHeart } from "lucide-react";
 import { Link } from "react-router-dom";
 
-const iconComponents = {
-  Sparkles,
-  Heart,
-  Mic,
-  Flower2,
-  Headphones,
-  HandHeart,
-};
+const iconComponents = { Sparkles, Heart, Mic, Flower2, Headphones, HandHeart };
 
 const ServicesSection = () => {
-  const [services] = useState([
+  const [services] = React.useState([
     {
       id: 1,
       title: "Spiritual Healing",
-      description:
-        "Align your inner energy and experience peace through guided healing sessions.",
+      description: "Align your inner energy and experience peace through guided healing sessions.",
       icon: "Flower2",
       slug: "spiritual-healing",
     },
     {
       id: 2,
       title: "Emotional Wellness",
-      description:
-        "Transform anxiety into calm and rediscover joy through emotional balance practices.",
+      description: "Transform anxiety into calm and rediscover joy through emotional balance practices.",
       icon: "Heart",
       slug: "emotional-wellness",
     },
     {
       id: 3,
       title: "Meditation Therapy",
-      description:
-        "Personalized meditations crafted to help you slow down and reconnect within.",
+      description: "Personalized meditations crafted to help you slow down and reconnect within.",
       icon: "Sparkles",
       slug: "meditation-therapy",
     },
     {
       id: 4,
       title: "Healing Audio Sessions",
-      description:
-        "Listen to soulful audio journeys that guide you into serenity and awareness.",
+      description: "Listen to soulful audio journeys that guide you into serenity and awareness.",
       icon: "Headphones",
       slug: "audio-sessions",
     },
     {
       id: 5,
       title: "Video Podcasts",
-      description:
-        "Explore deep, healing conversations that nourish the mind and soul.",
+      description: "Explore deep, healing conversations that nourish the mind and soul.",
       icon: "Mic",
       slug: "video-podcasts",
     },
     {
       id: 6,
       title: "Personal Guidance",
-      description:
-        "One-on-one sessions to help you find clarity, alignment, and emotional grounding.",
+      description: "One-on-one sessions to help you find clarity, alignment, and emotional grounding.",
       icon: "HandHeart",
       slug: "personal-guidance",
     },
@@ -73,114 +53,152 @@ const ServicesSection = () => {
 
   const sectionRef = useRef(null);
   const isInView = useInView(sectionRef, { once: true, margin: "-100px" });
-  const mouseX = useMotionValue(0);
-  const mouseY = useMotionValue(0);
-
-  // Parallax movement for glowing orbs
-  const translateX = useTransform(mouseX, [0, 1], [-30, 30]);
-  const translateY = useTransform(mouseY, [0, 1], [-20, 20]);
-
-  const handleMouseMove = (e) => {
-    const { left, top, width, height } = sectionRef.current.getBoundingClientRect();
-    const x = (e.clientX - left) / width;
-    const y = (e.clientY - top) / height;
-    mouseX.set(x);
-    mouseY.set(y);
-  };
 
   return (
     <section
       ref={sectionRef}
-      onMouseMove={handleMouseMove}
-      className="relative overflow-hidden py-12 sm:py-16 md:py-20 lg:py-24 bg-gradient-to-br from-pink-50/80 via-rose-100/60 to-white/80 font-poppins transition-all duration-1000"
+      className="relative overflow-hidden py-14 sm:py-16 md:py-20 lg:py-24 bg-gradient-to-br from-pink-50/80 via-rose-100/60 to-white/80 font-poppins"
     >
-      {/* Cinematic glowing orbs with responsive sizes */}
-      <motion.div
-        style={{ x: translateX, y: translateY }}
-        className="absolute top-4 sm:top-8 left-4 sm:left-8 w-32 sm:w-40 h-32 sm:h-40 bg-rose-200/50 rounded-full blur-xl opacity-70 animate-pulse"
-      ></motion.div>
-      <motion.div
-        style={{ x: translateY, y: translateX }}
-        className="absolute bottom-4 sm:bottom-8 right-4 sm:right-8 w-48 sm:w-60 h-48 sm:h-60 bg-pink-300/40 rounded-full blur-xl opacity-60 animate-pulse"
-      ></motion.div>
+      {/* GLOWING ORBS – TOUCH-SAFE */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <motion.div
+          className="absolute top-6 left-4 w-32 h-32 sm:w-40 sm:h-40 bg-rose-200/50 rounded-full blur-3xl opacity-60 animate-pulse"
+          animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0.7, 0.5] }}
+          transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <motion.div
+          className="absolute bottom-6 right-4 w-40 h-40 sm:w-56 sm:h-56 bg-pink-300/40 rounded-full blur-3xl opacity-50 animate-pulse"
+          animate={{ scale: [1.1, 1, 1.1], opacity: [0.4, 0.6, 0.4] }}
+          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+        />
+      </div>
 
-      {/* Heading with refined styling */}
+      {/* HEADING */}
       <motion.div
-        className="relative text-center mb-8 sm:mb-10 md:mb-12"
+        className="relative text-center mb-10 sm:mb-12 md:mb-14 px-4"
         initial={{ opacity: 0, y: 50 }}
         animate={isInView ? { opacity: 1, y: 0 } : {}}
         transition={{ duration: 0.8, ease: "easeOut" }}
       >
-        <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-light text-rose-800 mb-2 sm:mb-3 drop-shadow-[0_1px_4px_rgba(212,163,163,0.2)]">
+        <h2 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl font-light text-rose-800 mb-2 drop-shadow-sm">
           Healing & Therapy Services
         </h2>
-        <p className="text-sm sm:text-base md:text-lg text-gray-600 max-w-md sm:max-w-lg md:max-w-xl mx-auto leading-relaxed">
+        <p className="text-sm xs:text-base sm:text-lg md:text-xl text-gray-600 max-w-xs xs:max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl mx-auto leading-relaxed">
           Explore healing experiences through soulful podcasts, meditations, and personal guidance.
         </p>
       </motion.div>
 
-      {/* Service Cards with enhanced grid and responsiveness */}
+      {/* SERVICE CARDS GRID */}
       <motion.div
-        className="relative z-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 px-2 sm:px-4 md:px-6 lg:px-8"
+        className="
+          relative z-10 
+          grid grid-cols-1 
+          xs:grid-cols-2 
+          sm:grid-cols-2 
+          lg:grid-cols-3 
+          gap-5 xs:gap-6 sm:gap-7 lg:gap-8 
+          px-4 sm:px-6 lg:px-8 
+          max-w-7xl mx-auto
+        "
         initial="hidden"
         animate={isInView ? "visible" : "hidden"}
         variants={{
-          visible: { transition: { staggerChildren: 0.1 } },
+          visible: { transition: { staggerChildren: 0.12 } },
           hidden: {},
         }}
-        viewport={{ once: true, amount: 0.2 }}
       >
-        {services.map((service, i) => {
+        {services.map((service) => {
           const Icon = iconComponents[service.icon];
           return (
-            <motion.div
+            <motion.article
               key={service.id}
               variants={{
                 hidden: { opacity: 0, y: 40 },
                 visible: { opacity: 1, y: 0 },
               }}
-              whileHover={{ scale: 1.03, boxShadow: "0 0 15px rgba(212,163,163,0.3)" }}
-              transition={{ duration: 0.5 }}
-              className="relative group rounded-xl p-4 sm:p-6 text-center backdrop-blur-md bg-white/20 border border-white/20 shadow-md hover:shadow-lg transition-all duration-500"
+              whileTap={{ scale: 0.98 }}
+              // Hover only on pointer devices
+              {...(typeof window !== "undefined" && window.matchMedia("(hover: hover)").matches
+                ? { whileHover: { y: -6, scale: 1.04 } }
+                : {})}
+              className="
+                group relative 
+                bg-white/25 backdrop-blur-md 
+                border border-white/30 
+                rounded-2xl p-5 sm:p-6 
+                shadow-lg hover:shadow-pink-300/30 
+                transition-all duration-500 
+                w-full 
+                max-w-xs xs:max-w-none 
+                mx-auto xs:mx-0 
+                overflow-hidden
+              "
             >
-              {/* Inner light reflection */}
-              <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-pink-100/20 opacity-0 group-hover:opacity-100 rounded-xl transition-opacity duration-500"></div>
+              {/* GLOW OVERLAY */}
+              <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-pink-100/20 opacity-0 group-hover:opacity-100 rounded-2xl transition-opacity duration-500" />
 
-              <div className="relative z-10 flex flex-col items-center space-y-3 sm:space-y-4">
-                <div className="bg-gradient-to-br from-rose-200/60 to-pink-100/60 rounded-full p-3 sm:p-4 shadow-inner group-hover:shadow-pink-300/50 transition-shadow duration-300">
-                  {Icon && <Icon size={32} sm:size={38} className="text-rose-700" />}
+              <div className="relative z-10 flex flex-col items-center space-y-3 sm:space-y-4 text-center">
+                {/* ICON */}
+                <div className="bg-gradient-to-br from-rose-200/70 to-pink-100/70 rounded-full p-3 sm:p-4 shadow-inner group-hover:shadow-pink-300/50 transition-shadow duration-300">
+                  {Icon && <Icon size={28} className="sm:size-36 text-rose-700" />}
                 </div>
-                <h3 className="text-lg sm:text-xl md:text-2xl font-medium text-rose-800 line-clamp-1">
+
+                {/* TITLE */}
+                <h3 className="text-lg xs:text-xl sm:text-2xl font-medium text-rose-800 line-clamp-1">
                   {service.title}
                 </h3>
-                <p className="text-gray-700 text-xs sm:text-sm md:text-base leading-relaxed line-clamp-2">
+
+                {/* DESCRIPTION */}
+                <p className="text-xs xs:text-sm sm:text-base text-gray-700 leading-relaxed line-clamp-2 break-words px-2">
                   {service.description}
                 </p>
+
+                {/* CTA */}
                 <Link
-                  to={`/service/${service.slug}`}
-                  className="mt-2 sm:mt-3 inline-block bg-gradient-to-r from-rose-500/90 to-pink-500/90 hover:from-pink-600 hover:to-rose-600 text-white px-4 sm:px-5 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium shadow-md hover:shadow-rose-300/40 transition-all duration-300"
+                 to="/programspage"
+                  className="
+                    mt-3 inline-block 
+                    bg-rose-300 to-pink-600 
+                    hover:from-pink-600 hover:to-rose-700 
+                    text-white 
+                    px-4 sm:px-5 py-2 sm:py-2.5 
+                    rounded-full 
+                    text-xs sm:text-sm font-medium 
+                    shadow-md hover:shadow-rose-400/50 
+                    transition-all duration-300
+                  "
                 >
                   Learn More
                 </Link>
               </div>
-            </motion.div>
+            </motion.article>
           );
         })}
       </motion.div>
 
-      {/* Contact CTA with improved styling */}
+      {/* CONTACT CTA */}
       <motion.div
-        className="text-center mt-12 sm:mt-16 md:mt-20"
+        className="text-center mt-14 sm:mt-16 md:mt-20 px-4"
         initial={{ opacity: 0, y: 40 }}
         animate={isInView ? { opacity: 1, y: 0 } : {}}
-        transition={{ duration: 0.8, delay: 0.3 }}
+        transition={{ duration: 0.8, delay: 0.4 }}
       >
-        <h3 className="text-xl sm:text-2xl md:text-3xl font-medium text-rose-800 mb-4">
+        <h3 className="text-xl xs:text-2xl sm:text-3xl font-medium text-rose-800 mb-4">
           Ready to Begin Your Healing Journey?
         </h3>
         <Link
           to="/contact"
-          className="bg-gradient-to-r from-pink-500/90 to-rose-600/90 hover:from-rose-600 hover:to-pink-700 text-white px-6 sm:px-8 py-2 sm:py-3 rounded-full text-base sm:text-lg font-semibold shadow-md hover:shadow-rose-300/50 transition-all duration-300"
+          className="
+            inline-block 
+            bg-rose-300 
+            hover:from-rose-600 hover:to-pink-700 
+            text-white 
+            px-6 sm:px-8 py-3 sm:py-3.5 
+            rounded-full 
+            text-base sm:text-lg font-semibold 
+            shadow-lg hover:shadow-rose-400/60 
+            transition-all duration-300
+          "
         >
           Contact Me
         </Link>

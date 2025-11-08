@@ -1,59 +1,71 @@
-import React, { useState, useEffect } from "react";
+// app/src/components/BlogSection.jsx (or wherever it lives)
+
+import React, { useState, useEffect, useRef } from "react"; // <-- 1. ADD useState, useEffect
 import { motion, useInView } from "framer-motion";
 import { Link } from "react-router-dom";
-import { useRef } from 'react';
-const CTA_COLOR_CLASS = "bg-[#B08688] hover:bg-[#c060a1]";
+import Slider from "react-slick";
+import "slick-carousel/slick/slick.css";
+import "slick-carousel/slick/slick-theme.css";
+import { client, urlFor } from "../client"; // <-- 2. IMPORT SANITY
 
-const dummyPosts = [
-  {
-    id: 1,
-    title: "Embracing Mindfulness in Daily Life",
-    excerpt: "Learn how to integrate mindfulness practices into your routine to foster peace and clarity amidst the chaos of everyday life.",
-    slug: "embracing-mindfulness",
-    imageUrl: "https://elohee.org/wp-content/uploads/2025/04/image_5b3cb4f6041283aface23c0db6b086c9-scaled.jpg",
-  },
-  {
-    id: 2,
-    title: "The Power of Breathwork for Healing",
-    excerpt: "Explore the transformative effects of breathwork and how it can release stress and unlock your body's natural energy flow.",
-    slug: "power-of-breathwork",
-    imageUrl: "https://www.shutterstock.com/image-photo/experience-serene-beauty-yoga-on-260nw-2455852459.jpg",
-  },
-  {
-    id: 3,
-    title: "Finding Balance Through Guided Meditation",
-    excerpt: "Discover the benefits of guided meditation to achieve emotional balance and spiritual awakening in this insightful post.",
-    slug: "guided-meditation",
-    imageUrl: "https://www.shutterstock.com/image-vector/spiritual-therapy-body-mind-harmony-260nw-1852509394.jpg",
-  },
-  {
-    id: 4,
-    title: "The Art of Spiritual Clarity",
-    excerpt: "Uncover practical wisdom to ground your spirit and illuminate your path towards a more meaningful life.",
-    slug: "spiritual-clarity",
-    imageUrl: "https://nandinibali.com/storage/images/page/hero_image/B0002506_cr.jpg",
-  },
-  {
-    id: 5,
-    title: "Harnessing Energy for Inner Healing",
-    excerpt: "Dive into the techniques of energy work and heart-centered awareness to foster deep emotional healing.",
-    slug: "inner-healing",
-    imageUrl: "https://www.shutterstock.com/image-photo/yoga-meditation-outdoors-glowing-seven-260nw-2359553275.jpg",
-  },
-];
+// 3. We DELETE the static 'dummyPosts' array
+// const dummyPosts = [ ... ];
+
+// 4. We define a query to get the 6 most recent posts
+const postQuery = `*[_type == "post"] | order(publishedAt desc)[0...6] {
+  _id,
+  title,
+  excerpt,
+  mainImage,
+  "slug": slug.current
+}`;
+
+// Your static Slick settings are perfect
+const sliderSettings = {
+  dots: true,
+  infinite: true,
+  speed: 600,
+  slidesToShow: 3,
+  slidesToScroll: 1,
+  autoplay: true,
+  autoplaySpeed: 4000,
+  arrows: false,
+  centerMode: true,
+  centerPadding: "10px",
+  responsive: [
+    { breakpoint: 640, settings: { slidesToShow: 1, centerPadding: "15px" } },
+    { breakpoint: 768, settings: { slidesToShow: 2, centerPadding: "10px" } },
+    { breakpoint: 1024, settings: { slidesToShow: 3, centerPadding: "0" } },
+  ],
+};
 
 const BlogSection = () => {
-  const [x, setX] = useState(0);
   const sectionRef = useRef(null);
   const isInView = useInView(sectionRef, { once: true, margin: "-100px" });
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setX((prev) => (prev - 350 <= -dummyPosts.length * 350 ? 0 : prev - 350));
-    }, 4000);
-    return () => clearInterval(interval);
-  }, []);
+  // --- 5. ADD STATE FOR DYNAMIC DATA ---
+  const [posts, setPosts] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  // ------------------------------------
 
+  // --- 6. ADD useEffect TO FETCH POSTS ---
+  useEffect(() => {
+    client
+      .fetch(postQuery)
+      .then((data) => {
+        setPosts(data);
+        setIsLoading(false);
+      })
+      .catch((err) => {
+        console.error("Failed to fetch posts for carousel:", err);
+        setError(err);
+        setIsLoading(false);
+      });
+  }, []); // Runs once on component mount
+  // ---------------------------------------
+
+  // All your animation variants are perfect
   const containerVariants = {
     hidden: { opacity: 0, y: 50 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: "easeOut" } },
@@ -61,112 +73,171 @@ const BlogSection = () => {
 
   const cardVariants = {
     hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.6 } },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.6, staggerChildren: 0.1 } },
   };
 
   const cardHover = {
+    y: -8,
     scale: 1.03,
-    y: -5,
-    boxShadow: "0 10px 20px rgba(236, 72, 153, 0.3)",
+    boxShadow: "0 15px 30px rgba(236, 72, 153, 0.25)",
     transition: { type: "spring", stiffness: 300 },
   };
 
+  // --- 7. HELPER FUNCTION TO RENDER THE SLIDER ---
+  // This is the professional approach you asked for.
+  // The static parts of the component will render, and this
+  // function will handle the dynamic part.
+  const renderSlider = () => {
+    if (isLoading) {
+      return (
+        <div className="text-center text-lg text-rose-800 p-10">
+          Loading Journal...
+        </div>
+      );
+    }
+
+    if (error) {
+      return (
+        <div className="text-center p-6 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+          <strong>Error:</strong> Failed to load posts.
+        </div>
+      );
+    }
+
+    if (posts.length === 0) {
+      return (
+        <div className="text-center text-lg text-gray-700 p-10">
+          No posts found.
+        </div>
+      );
+    }
+
+    // Success: Render the slider
+    return (
+      <Slider {...sliderSettings}>
+        {posts.map((post, i) => (
+          <div key={post._id} className="px-2 sm:px-3"> {/* Use Sanity _id for key */}
+            <Link
+              to={`/blog/${post.slug || post._id}`} // Use slug, with fallback to _id
+              className="block w-full h-full"
+              aria-label={`Read: ${post.title || 'Untitled Post'}`}
+            >
+              <motion.article
+                whileHover={cardHover}
+                whileTap={{ scale: 0.98 }}
+                className="bg-white/30 backdrop-blur-md border border-white/40 rounded-2xl overflow-hidden shadow-xl hover:border-pink-300/60 transition-all duration-500 h-full flex flex-col"
+              >
+                {/* IMAGE (Bulletproof & Lazy Load) */}
+                <div className="relative aspect-[4/3] overflow-hidden bg-gray-100">
+                  <img
+                    src={
+                      post.mainImage
+                        ? urlFor(post.mainImage).width(400).height(300).fit("crop").url()
+                        : "https://via.placeholder.com/400x300?text=Missing+Image"
+                    }
+                    alt={post.title || "Blog post image"}
+                    className="w-full h-full object-cover transition-transform duration-700 hover:scale-110"
+                    loading="lazy" // <-- LAZY LOADING
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-rose-900/60 via-transparent to-transparent" />
+                </div>
+
+                {/* CONTENT (Bulletproof) */}
+                <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between text-center">
+                  <div>
+                    <h3 className="font-semibold text-rose-900 mb-2 line-clamp-2 text-sm sm:text-base md:text-lg leading-tight">
+                      {post.title || "Untitled Post"}
+                    </h3>
+                    <p className="text-xs sm:text-sm text-rose-700/80 leading-snug line-clamp-3 mb-3">
+                      {post.excerpt || "No summary available."}
+                    </p>
+                  </div>
+                  <span className="mt-2 inline-block px-4 py-2 text-xs sm:text-sm font-medium text-white bg-rose-300 rounded-full shadow-md hover:from-pink-600 hover:to-rose-700 transition-all duration-300">
+                    Read More
+                  </span>
+                </div>
+              </motion.article>
+            </Link>
+          </div>
+        ))}
+      </Slider>
+    );
+  };
+
+  // --- MAIN RETURN (Your static layout is safe) ---
   return (
     <section
       ref={sectionRef}
-      className="relative py-16 sm:py-20 md:py-24 lg:py-28 font-['Playfair_Display'] overflow-hidden bg-transparent"
+      className="relative py-16 sm:py-20 md:py-24 lg:py-28 font-['Playfair_Display'] overflow-hidden bg-gradient-to-b from-transparent via-pink-50/5 to-transparent"
     >
-      {/* FLOATING GLOW EFFECTS */}
-      <div className="absolute inset-0 overflow-hidden z-0">
-        {[...Array(6)].map((_, i) => (
-          <motion.span
+      {/* FLOATING GLOW ORBS (Static) */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+        {[...Array(5)].map((_, i) => (
+          <motion.div
             key={i}
-            className="absolute w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-gradient-to-br from-pink-400/20 to-rose-600/20 blur-[80px]"
+            className="absolute w-32 h-32 sm:w-40 sm:h-40 rounded-full bg-gradient-to-br from-pink-400/20 to-rose-600/20 blur-3xl"
             initial={{
-              x: Math.random() * 100 + "%",
-              y: Math.random() * 100 + "%",
-              opacity: 0.4,
+              x: `${Math.random() * 100}%`,
+              y: `${Math.random() * 100}%`,
             }}
-            animate={isInView ? { y: [null, Math.random() * 100 + "%"], opacity: [0.4, 0.6, 0.4] } : {}}
+            animate={isInView ? { y: [null, `${Math.random() * 80}%`], opacity: [0.3, 0.5, 0.3] } : {}}
             transition={{
-              duration: 20 + Math.random() * 10,
+              duration: 15 + Math.random() * 10,
               repeat: Infinity,
               ease: "easeInOut",
-              delay: Math.random() * 2,
             }}
           />
         ))}
       </div>
 
       <div className="relative container mx-auto px-4 sm:px-6 lg:px-8 z-10">
-        {/* SECTION HEADING */}
+        {/* HEADING (Static) */}
         <motion.div
           className="text-center mb-12 sm:mb-16"
           variants={containerVariants}
           initial="hidden"
           animate={isInView ? "visible" : "hidden"}
         >
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-rose-900 mb-3 drop-shadow-[0_2px_6px_rgba(236,72,153,0.3)]">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-rose-900 mb-3 drop-shadow-md">
             From Marina’s Journal
           </h2>
-          <p className="text-sm sm:text-base md:text-lg text-gray-800 max-w-xl mx-auto leading-relaxed italic">
+          <p className="
+  text-sm 
+  xs:text-base 
+  sm:text-lg 
+  md:text-xl 
+  text-rose-800/85 
+  max-w-xs 
+  xs:max-w-sm 
+  sm:max-w-md 
+  md:max-w-lg 
+  lg:max-w-xl 
+  xl:max-w-2xl 
+  mx-auto 
+  leading-relaxed 
+  xs:leading-loose 
+  italic 
+  text-center 
+  sm:text-center 
+  md:text-center 
+  px-4 
+  hyphens-auto 
+  break-words
+">
             Soulful reflections and practices to nurture your mind, body, and spirit.
           </p>
         </motion.div>
 
-        {/* CAROUSEL */}
-        <div className="overflow-hidden relative max-w-7xl mx-auto">
-          <motion.div
-            className="flex space-x-6 sm:space-x-8"
-            animate={{ x }}
-            transition={{
-              type: "spring",
-              stiffness: 50,
-              damping: 20,
-              duration: 1.5,
-            }}
-          >
-            {[...dummyPosts, ...dummyPosts].map((post, index) => (
-              <Link
-                to={`/blog/${post.slug}`}
-                key={index}
-                className="min-w-[280px] sm:min-w-[300px] md:min-w-[320px] bg-white/25 backdrop-blur-lg border border-white/30 rounded-2xl overflow-hidden shadow-lg hover:border-pink-400/50 transition-all duration-500"
-              >
-                <motion.div
-                  variants={cardVariants}
-                  initial="hidden"
-                  animate={isInView ? "visible" : "hidden"}
-                  whileHover={cardHover}
-                >
-                  {/* IMAGE */}
-                  <div className="relative h-40 sm:h-48 md:h-56 overflow-hidden rounded-t-2xl">
-                    <img
-                      src={post.imageUrl}
-                      alt={post.title}
-                      className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
-                      loading="lazy"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-rose-600/50 to-transparent"></div>
-                  </div>
-
-                  {/* CONTENT */}
-                  
-                  <div className="p-4 sm:p-5 text-center">
-                    <h3 className="text-base sm:text-lg md:text-xl font-semibold text-rose-900 mb-2 hover:text-pink-600 transition-colors duration-300 line-clamp-2">
-                      {post.title}
-                    </h3>
-                    <p className="text-xs sm:text-sm text-gray-800 leading-snug mb-3 line-clamp-3">
-                      {post.excerpt}
-                    </p>
-                    <span className="inline-block px-3 sm:px-4 py-1.5 text-sm text-white bg-gradient-to-r from-rose-200 to-pink-300 rounded-full shadow-md hover:from-pink-700 hover:to-rose-700 transition-all duration-300">
-                      Read More
-                    </span>
-                  </div>
-                </motion.div>
-              </Link>
-            ))}
-          </motion.div>
-        </div>
+        {/* RESPONSIVE SLIDER (Now dynamic) */}
+        <motion.div
+          variants={cardVariants}
+          initial="hidden"
+          animate={isInView ? "visible" : "hidden"}
+          className="max-w-7xl mx-auto"
+        >
+          {/* 8. We call our dynamic render function here */}
+          {renderSlider()}
+        </motion.div>
       </div>
     </section>
   );
