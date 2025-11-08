@@ -10,7 +10,7 @@ import {
   Heart,
   ArrowLeft,
 } from "lucide-react";
-import OrderModal from "./OrderModal";
+import OrderModal from "./ordermodal";
 import { client, urlFor } from "../../client"; // <-- 1. IMPORT SANITY
 
 // 2. We DELETE the static 'productData' array
