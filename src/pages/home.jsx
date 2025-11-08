@@ -9,7 +9,7 @@ import CounterSection from "../components/countersection";
 import ServicesSection from "../components/servicessection";
 import DonationSection from "../components/collectivegrowth";
 import BlogSection from "../components/blogsection";
-import MiniAdBanner from "../components/ProductCarousel";
+import MiniAdBanner from "../components/productcarousel";
 
 // This one query professionally fetches all data for this page
 const homePageQuery = `
