@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { client } from '../client'; // <-- IMPORT SANITY CLIENT
 
 // Import all your page sections
-import Hero from "../components/Hero";
+import Hero from "../components/hero";
 import MissionSection from "../components/missionsection";
 import CounterSection from "../components/countersection";
 import ServicesSection from "../components/servicessection";
