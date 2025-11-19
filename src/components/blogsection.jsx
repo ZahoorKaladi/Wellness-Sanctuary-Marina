@@ -1,17 +1,13 @@
-// app/src/components/BlogSection.jsx (or wherever it lives)
+// app/src/components/BlogSection.jsx
 
-import React, { useState, useEffect, useRef } from "react"; // <-- 1. ADD useState, useEffect
+import React, { useState, useEffect, useRef } from "react";
 import { motion, useInView } from "framer-motion";
 import { Link } from "react-router-dom";
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
-import { client, urlFor } from "../client"; // <-- 2. IMPORT SANITY
+import { client, urlFor } from "../client";
 
-// 3. We DELETE the static 'dummyPosts' array
-// const dummyPosts = [ ... ];
-
-// 4. We define a query to get the 6 most recent posts
 const postQuery = `*[_type == "post"] | order(publishedAt desc)[0...6] {
   _id,
   title,
@@ -20,224 +16,154 @@ const postQuery = `*[_type == "post"] | order(publishedAt desc)[0...6] {
   "slug": slug.current
 }`;
 
-// Your static Slick settings are perfect
 const sliderSettings = {
   dots: true,
   infinite: true,
-  speed: 600,
+  speed: 800,
   slidesToShow: 3,
   slidesToScroll: 1,
   autoplay: true,
-  autoplaySpeed: 4000,
+  autoplaySpeed: 4500,
   arrows: false,
   centerMode: true,
-  centerPadding: "10px",
+  centerPadding: "60px",
+  cssEase: "cubic-bezier(0.6, 0.05, 0.2, 0.95)",
   responsive: [
-    { breakpoint: 640, settings: { slidesToShow: 1, centerPadding: "15px" } },
-    { breakpoint: 768, settings: { slidesToShow: 2, centerPadding: "10px" } },
-    { breakpoint: 1024, settings: { slidesToShow: 3, centerPadding: "0" } },
+    { breakpoint: 640,  settings: { slidesToShow: 1, centerPadding: "20px" } },
+    { breakpoint: 1024, settings: { slidesToShow: 2, centerPadding: "40px" } },
+    { breakpoint: 1280, settings: { slidesToShow: 3, centerPadding: "60px" } },
   ],
 };
 
 const BlogSection = () => {
   const sectionRef = useRef(null);
-  const isInView = useInView(sectionRef, { once: true, margin: "-100px" });
+  const isInView = useInView(sectionRef, { once: true, margin: "-10%" });
 
-  // --- 5. ADD STATE FOR DYNAMIC DATA ---
   const [posts, setPosts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
-  // ------------------------------------
 
-  // --- 6. ADD useEffect TO FETCH POSTS ---
   useEffect(() => {
     client
       .fetch(postQuery)
       .then((data) => {
-        setPosts(data);
+        setPosts(data || []);
         setIsLoading(false);
       })
       .catch((err) => {
-        console.error("Failed to fetch posts for carousel:", err);
-        setError(err);
+        console.error(err);
         setIsLoading(false);
       });
-  }, []); // Runs once on component mount
-  // ---------------------------------------
+  }, []);
 
-  // All your animation variants are perfect
-  const containerVariants = {
-    hidden: { opacity: 0, y: 50 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: "easeOut" } },
-  };
-
-  const cardVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.6, staggerChildren: 0.1 } },
-  };
-
-  const cardHover = {
-    y: -8,
-    scale: 1.03,
-    boxShadow: "0 15px 30px rgba(236, 72, 153, 0.25)",
-    transition: { type: "spring", stiffness: 300 },
-  };
-
-  // --- 7. HELPER FUNCTION TO RENDER THE SLIDER ---
-  // This is the professional approach you asked for.
-  // The static parts of the component will render, and this
-  // function will handle the dynamic part.
-  const renderSlider = () => {
-    if (isLoading) {
-      return (
-        <div className="text-center text-lg text-rose-800 p-10">
-          Loading Journal...
-        </div>
-      );
-    }
-
-    if (error) {
-      return (
-        <div className="text-center p-6 bg-red-100 border border-red-400 text-red-700 rounded-lg">
-          <strong>Error:</strong> Failed to load posts.
-        </div>
-      );
-    }
-
-    if (posts.length === 0) {
-      return (
-        <div className="text-center text-lg text-gray-700 p-10">
-          No posts found.
-        </div>
-      );
-    }
-
-    // Success: Render the slider
-    return (
-      <Slider {...sliderSettings}>
-        {posts.map((post, i) => (
-          <div key={post._id} className="px-2 sm:px-3"> {/* Use Sanity _id for key */}
-            <Link
-              to={`/blog/${post.slug || post._id}`} // Use slug, with fallback to _id
-              className="block w-full h-full"
-              aria-label={`Read: ${post.title || 'Untitled Post'}`}
-            >
-              <motion.article
-                whileHover={cardHover}
-                whileTap={{ scale: 0.98 }}
-                className="bg-white/30 backdrop-blur-md border border-white/40 rounded-2xl overflow-hidden shadow-xl hover:border-pink-300/60 transition-all duration-500 h-full flex flex-col"
-              >
-                {/* IMAGE (Bulletproof & Lazy Load) */}
-                <div className="relative aspect-[4/3] overflow-hidden bg-gray-100">
-                  <img
-                    src={
-                      post.mainImage
-                        ? urlFor(post.mainImage).width(400).height(300).fit("crop").url()
-                        : "https://via.placeholder.com/400x300?text=Missing+Image"
-                    }
-                    alt={post.title || "Blog post image"}
-                    className="w-full h-full object-cover transition-transform duration-700 hover:scale-110"
-                    loading="lazy" // <-- LAZY LOADING
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-rose-900/60 via-transparent to-transparent" />
-                </div>
-
-                {/* CONTENT (Bulletproof) */}
-                <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between text-center">
-                  <div>
-                    <h3 className="font-semibold text-rose-900 mb-2 line-clamp-2 text-sm sm:text-base md:text-lg leading-tight">
-                      {post.title || "Untitled Post"}
-                    </h3>
-                    <p className="text-xs sm:text-sm text-rose-700/80 leading-snug line-clamp-3 mb-3">
-                      {post.excerpt || "No summary available."}
-                    </p>
-                  </div>
-                  <span className="mt-2 inline-block px-4 py-2 text-xs sm:text-sm font-medium text-white bg-rose-300 rounded-full shadow-md hover:from-pink-600 hover:to-rose-700 transition-all duration-300">
-                    Read More
-                  </span>
-                </div>
-              </motion.article>
-            </Link>
-          </div>
-        ))}
-      </Slider>
-    );
-  };
-
-  // --- MAIN RETURN (Your static layout is safe) ---
   return (
     <section
       ref={sectionRef}
-      className="relative py-16 sm:py-20 md:py-24 lg:py-28 font-['Playfair_Display'] overflow-hidden bg-gradient-to-b from-transparent via-pink-50/5 to-transparent"
+      className="relative py-16 sm:py-24 lg:py-32 overflow-hidden bg-gradient-to-b from-rose-50/80 via-white to-pink-50/50"
     >
-      {/* FLOATING GLOW ORBS (Static) */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-        {[...Array(5)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute w-32 h-32 sm:w-40 sm:h-40 rounded-full bg-gradient-to-br from-pink-400/20 to-rose-600/20 blur-3xl"
-            initial={{
-              x: `${Math.random() * 100}%`,
-              y: `${Math.random() * 100}%`,
-            }}
-            animate={isInView ? { y: [null, `${Math.random() * 80}%`], opacity: [0.3, 0.5, 0.3] } : {}}
-            transition={{
-              duration: 15 + Math.random() * 10,
-              repeat: Infinity,
-              ease: "easeInOut",
-            }}
-          />
-        ))}
+      {/* Soft dreamy background glows */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute -top-40 -left-40 w-96 h-96 bg-[#b08688]/20 rounded-full blur-3xl" />
+        <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-pink-200/20 rounded-full blur-3xl" />
       </div>
 
-      <div className="relative container mx-auto px-4 sm:px-6 lg:px-8 z-10">
-        {/* HEADING (Static) */}
+      <div className="relative container mx-auto px-5 sm:px-6 lg:px-8 max-w-7xl">
+        
+        {/* === PERFECTLY RESPONSIVE TITLE === */}
         <motion.div
-          className="text-center mb-12 sm:mb-16"
-          variants={containerVariants}
-          initial="hidden"
-          animate={isInView ? "visible" : "hidden"}
+          initial={{ opacity: 0, y: 40 }}
+          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 1.2, ease: "easeOut" }}
+          className="text-center mb-12 sm:mb-16 lg:mb-24 px-2"
         >
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-rose-900 mb-3 drop-shadow-md">
+          <h3
+            className="
+              font-bold 
+              text-3xl          /* Mobile Base */
+              xs:text-4xl       /* Large Phone */
+              sm:text-5xl       /* Tablet */
+              md:text-6xl       /* Laptop */
+              lg:text-6xl       /* Desktop */
+              xl:text-7xl       /* Large Desktop */
+              leading-[1.1]     /* Tighter line height prevents large gaps */
+              tracking-tight 
+              text-transparent 
+              bg-clip-text 
+              bg-gradient-to-r 
+              from-[#b08688] 
+              via-[#b08688] 
+              to-pink-500 
+              max-w-5xl 
+              mx-auto
+              w-full
+              break-words       /* Prevents text from overflowing screen */
+            "
+          >
             From Marina’s Journal
-          </h2>
-          <p className="
-  text-sm 
-  xs:text-base 
-  sm:text-lg 
-  md:text-xl 
-  text-rose-800/85 
-  max-w-xs 
-  xs:max-w-sm 
-  sm:max-w-md 
-  md:max-w-lg 
-  lg:max-w-xl 
-  xl:max-w-2xl 
-  mx-auto 
-  leading-relaxed 
-  xs:leading-loose 
-  italic 
-  text-center 
-  sm:text-center 
-  md:text-center 
-  px-4 
-  hyphens-auto 
-  break-words
-">
-            Soulful reflections and practices to nurture your mind, body, and spirit.
+          </h3>
+
+          <p className="mt-4 sm:mt-6 text-base sm:text-lg lg:text-xl text-gray-600 font-light italic max-w-2xl mx-auto leading-relaxed"> {/* Reverted to leading-relaxed */}  
+            All Services for your well-being
           </p>
         </motion.div>
 
-        {/* RESPONSIVE SLIDER (Now dynamic) */}
-        <motion.div
-          variants={cardVariants}
-          initial="hidden"
-          animate={isInView ? "visible" : "hidden"}
-          className="max-w-7xl mx-auto"
-        >
-          {/* 8. We call our dynamic render function here */}
-          {renderSlider()}
-        </motion.div>
+        {/* Loading / Empty / Slider */}
+        {isLoading ? (
+          <div className="text-center py-20">
+            <div className="w-12 h-12 mx-auto border-4 border-[#b08688]/20 border-t-[#b08688] rounded-full animate-spin" />
+            <p className="mt-4 text-[#b08688]/70 font-light">Loading journal...</p>
+          </div>
+        ) : posts.length === 0 ? (
+          <p className="text-center py-16 text-gray-500 italic">No journal entries yet ♡</p>
+        ) : (
+          <Slider {...sliderSettings}>
+            {posts.map((post) => (
+              <div key={post._id} className="px-3 sm:px-5 py-4"> {/* Added py-4 to prevent shadow clip */}
+                <Link to={`/blog/${post.slug || post._id}`}>
+                  <motion.article
+                    whileHover={{ y: -10 }}
+                    className="group relative bg-white/85 backdrop-blur-xl rounded-3xl overflow-hidden shadow-xl border border-white/60 h-full flex flex-col hover:shadow-2xl hover:border-[#b08688]/40 transition-all duration-500"
+                  >
+                    {/* Image */}
+                    <div className="relative aspect-[4/3] bg-gradient-to-br from-rose-50 to-pink-50">
+                      {post.mainImage ? (
+                        <img
+                          src={urlFor(post.mainImage).width(800).height(600).fit("crop").quality(85).url()}
+                          alt={post.title || "Journal post"}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div className="flex items-center justify-center h-full text-6xl text-rose-200">♡</div>
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+                      <span className="absolute bottom-4 left-5 text-white text-xs font-semibold tracking-widest">
+                        JOURNAL
+                      </span>
+                    </div>
+
+                    {/* Content */}
+                    <div className="p-5 sm:p-6 flex-1 flex flex-col justify-between">
+                      <div>
+                        <h3 className="text-base sm:text-lg lg:text-xl font-bold text-gray-900 mb-3 line-clamp-2 group-hover:text-[#b08688] transition-colors">
+                          {post.title || "Untitled"}
+                        </h3>
+                        <p className="text-gray-600 text-xs sm:text-sm line-clamp-3 font-light">
+                          {post.excerpt || "A gentle reflection on feminine energy and soulful living..."}
+                        </p>
+                      </div>
+
+                      <div className="mt-5">
+                        <span className="inline-block px-5 py-2.5 bg-[#b08688]/10 text-[#b08688] font-medium text-sm rounded-full hover:bg-[#b08688] hover:text-white transition-all duration-300 shadow-lg">
+                          Read More
+                        </span>
+                      </div>
+                    </div>
+                  </motion.article>
+                </Link>
+              </div>
+            ))}
+          </Slider>
+        )}
       </div>
     </section>
   );

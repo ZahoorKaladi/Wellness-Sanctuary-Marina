@@ -7,7 +7,7 @@ import Hero from "../components/hero";
 import MissionSection from "../components/missionsection";
 import CounterSection from "../components/countersection";
 import ServicesSection from "../components/servicessection";
-import DonationSection from "../components/collectivegrowth";
+import TestimonialCarousel from "../components/testimonialcarousel";
 import BlogSection from "../components/blogsection";
 import MiniAdBanner from "../components/productcarousel";
 
@@ -67,7 +67,7 @@ const Home = () => {
       <BlogSection/>
       <CounterSection/>
       <ServicesSection/>
-      <DonationSection/>
+      <TestimonialCarousel/>
    
     </div>
   );

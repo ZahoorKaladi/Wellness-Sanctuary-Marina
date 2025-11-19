@@ -90,18 +90,18 @@ const HeroSection = () => {
         {/* Name & Role */}
         <motion.h1
           id="hero-title"
-          className="text-5xl sm:text-6xl md:text-7xl font-['Playfair_Display'] font-extrabold mb-3 tracking-wide"
+          className="text-4xl sm:text-5xl md:text-6xl font-['Playfair_Display'] font-extrabold mb-3 tracking-wide"
         >
           <span className="bg-clip-text text-transparent bg-gradient-to-r from-rose-100 via-pink-200 to-rose-400 animate-gradient-x">
             Marina
           </span>
         </motion.h1>
-        <p className="text-xl md:text-2xl text-rose-100 font-light mb-6">
+        <p className="text-lg md:text-xl text-rose-100 font-light mb-6">
           Luxury Wellness Host, Therapist & Podcaster
         </p>
 
         {/* Description */}
-        <p className="text-base sm:text-lg md:text-xl text-rose-50/90 max-w-2xl mx-auto mb-8 leading-relaxed">
+        <p className="text-sm sm:text-base md:text-lg text-rose-50/90 max-w-2xl mx-auto mb-8 leading-relaxed">
           With over <span className="font-semibold text-rose-200">12 years of experience</span> in emotional healing,
           mindful storytelling, and podcasting, Marina has inspired thousands to embrace clarity, calm, and luxury
           wellness through the art of connection.
@@ -112,7 +112,7 @@ const HeroSection = () => {
           <AnimatePresence mode="wait">
             <motion.p
               key={headerIndex}
-              className="text-lg sm:text-xl md:text-2xl text-rose-50/95 font-light tracking-wide leading-relaxed"
+              className="text-base sm:text-lg md:text-xl text-rose-50/95 font-light tracking-wide leading-relaxed"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
@@ -129,7 +129,7 @@ const HeroSection = () => {
             to="/about">
           <motion.button
             
-            className="px-8 py-3 text-rose-900 font-semibold text-lg rounded-full bg-white/90 hover:bg-white shadow-[0_0_25px_rgba(255,255,255,0.2)] hover:shadow-[0_0_40px_rgba(255,255,255,0.4)] transition-all duration-500"
+            className="px-8 py-3 text-rose-900 font-semibold text-base rounded-full bg-white/90 hover:bg-white shadow-[0_0_25px_rgba(255,255,255,0.2)] hover:shadow-[0_0_40px_rgba(255,255,255,0.4)] transition-all duration-500"
             whileHover={{ scale: 1.05 }}
           >
             Read Full Story
@@ -139,7 +139,7 @@ const HeroSection = () => {
           to="/sessionbooking">
           <motion.button
             onClick={scrollToPrograms}
-            className="px-8 py-3 text-white font-semibold text-lg rounded-full border border-white/70 bg-white/10 hover:bg-white/20 backdrop-blur-lg transition-all duration-500 shadow-[0_0_25px_rgba(255,255,255,0.2)] hover:shadow-[0_0_40px_rgba(255,255,255,0.4)]"
+            className="px-8 py-3 text-white font-semibold text-base rounded-full border border-white/70 bg-white/10 hover:bg-white/20 backdrop-blur-lg transition-all duration-500 shadow-[0_0_25px_rgba(255,255,255,0.2)] hover:shadow-[0_0_40px_rgba(255,255,255,0.4)]"
             whileHover={{ scale: 1.05 }}
           >
             Book Session

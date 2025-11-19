@@ -2,37 +2,76 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
-import { client, urlFor } from "../client"; // <-- 1. IMPORT SANITY
+import { client, urlFor } from "../client";
 
-// 2. We keep your static header messages
+const POSTS_PER_PAGE = 6;
+
 const headerMessages = [
   "Discover Spiritual Wisdom",
   "Journey to Inner Peace",
   "Insights for Wellness",
 ];
 
-// 3. We define a simple query for ONLY the posts
-const postQuery = `*[_type == "post"] | order(_createdAt desc) {
-  _id,
-  title,
-  excerpt,
-  mainImage,
-  "slug": slug.current
-}`;
+const CardSkeleton = () => (
+    <div className="group bg-white/70 backdrop-blur-lg border border-pink-100 rounded-3xl overflow-hidden shadow-sm animate-pulse">
+      <div className="relative h-56 md:h-64 bg-gray-200/80"></div>
+      <div className="p-6 md:p-8">
+        <div className="h-6 w-3/4 bg-gray-200/80 rounded mb-4"></div>
+        <div className="h-4 w-full bg-gray-200/80 rounded mb-2"></div>
+        <div className="h-4 w-5/6 bg-gray-200/80 rounded mb-6"></div>
+        <div className="h-12 w-full bg-gray-200/80 rounded-xl"></div>
+      </div>
+    </div>
+);
 
-// 4. We DELETE the static 'blogPosts' array
-// const blogPosts = [ ... ];
+const Pagination = ({ currentPage, totalPosts, postsPerPage, onPageChange }) => {
+    const totalPages = Math.ceil(totalPosts / postsPerPage);
+    if (totalPages <= 1) return null;
+  
+    const pageNumbers = [];
+    for (let i = 1; i <= totalPages; i++) {
+      pageNumbers.push(i);
+    }
+  
+    return (
+      <nav className="flex justify-center items-center gap-3 sm:gap-4 mt-16 sm:mt-20">
+        <button
+          onClick={() => onPageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+          className="px-4 py-2 bg-white/80 border border-pink-200 rounded-lg shadow-sm disabled:opacity-50 disabled:cursor-not-allowed transition-colors hover:bg-pink-100/50"
+        >
+          &larr;
+        </button>
+        <div className="flex items-center gap-2">
+          {pageNumbers.map(number => (
+            <button
+              key={number}
+              onClick={() => onPageChange(number)}
+              className={`w-10 h-10 rounded-lg transition-colors ${currentPage === number ? 'bg-rose-800 text-white shadow-lg' : 'bg-white/80 border border-pink-200 hover:bg-pink-100/50'}`}
+            >
+              {number}
+            </button>
+          ))}
+        </div>
+        <button
+          onClick={() => onPageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+          className="px-4 py-2 bg-white/80 border border-pink-200 rounded-lg shadow-sm disabled:opacity-50 disabled:cursor-not-allowed transition-colors hover:bg-pink-100/50"
+        >
+          &rarr;
+        </button>
+      </nav>
+    );
+};
 
 const BlogPage = () => {
   const [headerIndex, setHeaderIndex] = useState(0);
-
-  // --- 5. NEW STATE FOR DYNAMIC DATA ---
   const [posts, setPosts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  // ------------------------------------
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPosts, setTotalPosts] = useState(0);
 
-  // This is your original static animation, it's perfect
   useEffect(() => {
     const interval = setInterval(() => {
       setHeaderIndex((prev) => (prev + 1) % headerMessages.length);
@@ -40,28 +79,44 @@ const BlogPage = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // --- 6. NEW EFFECT TO FETCH DATA ---
   useEffect(() => {
+    setIsLoading(true);
+    const start = (currentPage - 1) * POSTS_PER_PAGE;
+    const end = start + POSTS_PER_PAGE;
+
+    const query = `
+      {
+        "posts": *[_type == "post"] | order(_createdAt desc)[$start...$end] {
+          _id,
+          title,
+          excerpt,
+          mainImage,
+          "slug": slug.current
+        },
+        "totalPosts": count(*[_type == "post"])
+      }
+    `;
+
     client
-      .fetch(postQuery)
+      .fetch(query, { start, end })
       .then((data) => {
-        setPosts(data);
+        setPosts(data.posts || []);
+        setTotalPosts(data.totalPosts || 0);
         setIsLoading(false);
+        window.scrollTo({ top: 400, behavior: 'smooth' });
       })
       .catch((err) => {
         console.error("Failed to fetch blog posts:", err);
         setError(err);
         setIsLoading(false);
       });
-  }, []); // Runs once on page load
-  // -----------------------------------
+  }, [currentPage]);
 
-  // Your original static variants, all perfect
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
-      transition: { staggerChildren: 0.15, delayChildren: 0.2 },
+      transition: { staggerChildren: 0.1, delayChildren: 0.2 },
     },
   };
 
@@ -77,14 +132,13 @@ const BlogPage = () => {
     transition: { type: "spring", stiffness: 260 },
   };
 
-  // --- 7. HELPER COMPONENT FOR THE GRID ---
-  // This lets us show the static page layout *while*
-  // the grid area handles its own loading/error states.
   const renderBlogGrid = () => {
     if (isLoading) {
       return (
-        <div className="text-center text-lg text-rose-800">
-          Loading posts...
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+          {Array.from({ length: POSTS_PER_PAGE }).map((_, i) => (
+            <CardSkeleton key={i} />
+          ))}
         </div>
       );
     }
@@ -99,70 +153,60 @@ const BlogPage = () => {
 
     if (posts.length === 0) {
       return (
-        <div className="text-center text-lg text-gray-700">
+        <div className="text-center text-lg text-gray-700 py-10">
           No posts found.
         </div>
       );
     }
 
-    // This is the "Success" state
     return (
       <motion.div
         className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8"
         variants={containerVariants}
         initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, amount: 0.15 }}
+        animate="visible"
+        viewport={{ once: true, amount: 0.1 }}
       >
         {posts.map((post) => (
           <motion.div
-            key={post._id} // <-- Use Sanity's unique _id
+            key={post._id}
             className="group bg-white/70 backdrop-blur-lg border border-pink-100 rounded-3xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300"
             variants={itemVariants}
             whileHover={cardHover}
           >
-            <div className="relative h-56 md:h-64 overflow-hidden">
-              <img
-                // 8. "BULLETPROOF" IMAGE LOADING (as promised)
-                src={
-                  post.mainImage
-                    ? urlFor(post.mainImage).width(500).height(400).fit("crop").url()
-                    : "https://via.placeholder.com/500x400?text=Missing+Image"
-                }
-                alt={post.title || "Blog post image"}
-                loading="lazy" // <-- LAZY LOADING (as promised)
-                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-              />
-            </div>
-            <div className="p-6 md:p-8">
-              <h3 className="text-2xl font-semibold font-['Playfair_Display'] text-rose-900 mb-3 leading-snug">
-                {/* 9. "BULLETPROOF" TEXT (as promised) */}
-                {post.title || "Untitled Post"}
-              </h3>
-              <p className="text-gray-700 text-base leading-relaxed mb-6">
-                {post.excerpt || "No summary available."}
-              </p>
-              <Link to={`/blog/${post.slug || post._id}`}>
-                <motion.button
-                  className="w-full py-3 bg-rose-300 text-white rounded-xl shadow-md font-medium text-base hover:from-rose-700 hover:to-pink-700 transition-all"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
+            <Link to={`/blog/${post.slug || post._id}`} className="block">
+              <div className="relative h-56 md:h-64 overflow-hidden">
+                <img
+                  src={
+                    post.mainImage
+                      ? urlFor(post.mainImage).width(500).height(400).fit("crop").url()
+                      : "https://via.placeholder.com/500x400?text=Missing+Image"
+                  }
+                  alt={post.title || "Blog post image"}
+                  loading="lazy"
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                />
+              </div>
+              <div className="p-6 md:p-8">
+                <h3 className="text-2xl font-semibold font-['Playfair_Display'] text-rose-900 mb-3 leading-snug line-clamp-2">
+                  {post.title || "Untitled Post"}
+                </h3>
+                <p className="text-gray-700 text-base leading-relaxed mb-6 line-clamp-3">
+                  {post.excerpt || "No summary available."}
+                </p>
+                <span className="w-full block text-center py-3 bg-rose-300 text-white rounded-xl shadow-md font-medium text-base group-hover:bg-rose-700 transition-all">
                   Read More
-                </motion.button>
-              </Link>
-            </div>
+                </span>
+              </div>
+            </Link>
           </motion.div>
         ))}
       </motion.div>
     );
   };
   
-  // --- RENDER FUNCTION ---
-  // This layout is all static and will load instantly
   return (
     <div className="font-sans bg-gradient-to-br from-rose-50 via-pink-50 to-white min-h-screen w-full">
-      {/* ✨ HEADER SECTION (Your original static code) */}
       <header
         className="relative w-full py-28 md:py-36 text-white text-center bg-cover bg-center overflow-hidden"
         style={{
@@ -199,11 +243,15 @@ const BlogPage = () => {
         </div>
       </header>
 
-      {/* ✨ BLOG GRID SECTION */}
       <section className="py-20 sm:py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* 10. We call our new helper function here */}
           {renderBlogGrid()}
+          <Pagination 
+            currentPage={currentPage}
+            totalPosts={totalPosts}
+            postsPerPage={POSTS_PER_PAGE}
+            onPageChange={(page) => setCurrentPage(page)}
+          />
         </div>
       </section>
     </div>

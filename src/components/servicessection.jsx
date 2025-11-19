@@ -1,52 +1,52 @@
 import React, { useRef } from "react";
 import { motion, useInView } from "framer-motion";
-import { Sparkles, Heart, Mic, Flower2, Headphones, HandHeart } from "lucide-react";
+import { Sparkle, HeartHandshake, BrainCircuit, Music, Youtube, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 
-const iconComponents = { Sparkles, Heart, Mic, Flower2, Headphones, HandHeart };
+const iconComponents = { Sparkle, HeartHandshake, BrainCircuit, Music, Youtube, Users };
 
 const ServicesSection = () => {
   const [services] = React.useState([
     {
       id: 1,
-      title: "Spiritual Healing",
-      description: "Align your inner energy and experience peace through guided healing sessions.",
-      icon: "Flower2",
+      title: "Spirituelle Heilung",
+      description: "Bringe deine innere Energie in Einklang und erfahre Frieden durch geführte Heilsitzungen.",
+      icon: "Sparkle",
       slug: "spiritual-healing",
     },
     {
       id: 2,
-      title: "Emotional Wellness",
-      description: "Transform anxiety into calm and rediscover joy through emotional balance practices.",
-      icon: "Heart",
+      title: "Emotionale Balance",
+      description: "Verwandle Angst in Gelassenheit und entdecke neue Lebensfreude durch Übungen für emotionale Balance.",
+      icon: "HeartHandshake",
       slug: "emotional-wellness",
     },
     {
       id: 3,
-      title: "Meditation Therapy",
-      description: "Personalized meditations crafted to help you slow down and reconnect within.",
-      icon: "Sparkles",
+      title: "Meditationstherapie",
+      description: "Personalisierte Meditationen, die dir helfen, zur Ruhe zu kommen und dich wieder mit dir selbst zu verbinden.",
+      icon: "BrainCircuit",
       slug: "meditation-therapy",
     },
     {
       id: 4,
-      title: "Healing Audio Sessions",
-      description: "Listen to soulful audio journeys that guide you into serenity and awareness.",
-      icon: "Headphones",
+      title: "Heilsame Audio-Sitzungen",
+      description: "Lausche gefühlvollen Audio-Reisen, die dich in Gelassenheit und Bewusstheit führen.",
+      icon: "Music",
       slug: "audio-sessions",
     },
     {
       id: 5,
-      title: "Video Podcasts",
-      description: "Explore deep, healing conversations that nourish the mind and soul.",
-      icon: "Mic",
+      title: "Video-Podcasts",
+      description: "Entdecke tiefgründige, heilsame Gespräche, die Geist und Seele nähren.",
+      icon: "Youtube",
       slug: "video-podcasts",
     },
     {
       id: 6,
-      title: "Personal Guidance",
-      description: "One-on-one sessions to help you find clarity, alignment, and emotional grounding.",
-      icon: "HandHeart",
+      title: "Persönliche Begleitung",
+      description: "Einzelsitzungen, die dir helfen, Klarheit, Ausrichtung und emotionale Erdung zu finden.",
+      icon: "Users",
       slug: "personal-guidance",
     },
   ]);
@@ -81,10 +81,10 @@ const ServicesSection = () => {
         transition={{ duration: 0.8, ease: "easeOut" }}
       >
         <h2 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl font-light text-rose-800 mb-2 drop-shadow-sm">
-          Healing & Therapy Services
+          Heilungs- & Therapieangebote
         </h2>
         <p className="text-sm xs:text-base sm:text-lg md:text-xl text-gray-600 max-w-xs xs:max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl mx-auto leading-relaxed">
-          Explore healing experiences through soulful podcasts, meditations, and personal guidance.
+          Entdecke heilsame Erfahrungen durch gefühlvolle Podcasts, Meditationen und persönliche Begleitung.
         </p>
       </motion.div>
 
@@ -140,7 +140,7 @@ const ServicesSection = () => {
               <div className="relative z-10 flex flex-col items-center space-y-3 sm:space-y-4 text-center">
                 {/* ICON */}
                 <div className="bg-gradient-to-br from-rose-200/70 to-pink-100/70 rounded-full p-3 sm:p-4 shadow-inner group-hover:shadow-pink-300/50 transition-shadow duration-300">
-                  {Icon && <Icon size={28} className="sm:size-36 text-rose-700" />}
+                  {Icon && <Icon size={28} className="sm:size-10 text-rose-700" />}
                 </div>
 
                 {/* TITLE */}
@@ -168,7 +168,7 @@ const ServicesSection = () => {
                     transition-all duration-300
                   "
                 >
-                  Learn More
+                  Mehr erfahren
                 </Link>
               </div>
             </motion.article>
@@ -184,7 +184,7 @@ const ServicesSection = () => {
         transition={{ duration: 0.8, delay: 0.4 }}
       >
         <h3 className="text-xl xs:text-2xl sm:text-3xl font-medium text-rose-800 mb-4">
-          Ready to Begin Your Healing Journey?
+          Bereit für deine Heilungsreise?
         </h3>
         <Link
           to="/contact"
@@ -200,7 +200,7 @@ const ServicesSection = () => {
             transition-all duration-300
           "
         >
-          Contact Me
+          Kontaktiere mich
         </Link>
       </motion.div>
     </section>

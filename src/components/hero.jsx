@@ -8,10 +8,10 @@ const HERO_IMAGE_DESKTOP = "https://images.pexels.com/photos/6341545/pexels-phot
 const FALLBACK_IMAGE_LOCAL = "https://via.placeholder.com/600x800?text=Fallback+Image";
 
 const content = [
-  "Find Your Inner Peace",
-  "Heal Through Sound and Spirit",
-  "Reconnect With Your Soul",
-  "Transform Your Energy Daily",
+  "Finde deinen inneren Frieden",
+  "Heile durch Klang und Geist",
+  "Verbinde dich wieder mit deiner Seele",
+  "Transformiere täglich deine Energie",
 ];
 
 // ----------------------------------------------------------------------
@@ -48,7 +48,7 @@ const Hero = () => {
     };
   }, []);
 
-  const description = "Embrace emotional, mental, and spiritual wellness with mindful therapy and soulful guidance. Start your transformation today.";
+  const description = "Umarme emotionales, mentales und spirituelles Wohlbefinden mit achtsamer Therapie und gefühlvoller Führung. Beginne noch heute deine Transformation.";
 
   const backgroundStyle = useMemo(() => {
     const imageUrl = isMobile ? HERO_IMAGE_MOBILE : HERO_IMAGE_DESKTOP;
@@ -116,13 +116,13 @@ const Hero = () => {
             transition={{ duration: prefersReducedMotion ? 0.4 : 1, ease: "easeOut" }}
           >
             <h1
-              className="text-white font-semibold mb-4 sm:mb-6 leading-tight drop-shadow-2xl text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl break-words tracking-wide"
+              className="text-white font-semibold mb-4 sm:mb-6 leading-tight drop-shadow-2xl text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl break-words tracking-wide"
               style={{ textShadow: "0 4px 15px rgba(0, 0, 0, 0.9)", fontFamily: "'Poppins', sans-serif" }}
             >
               {content[currentIndex]}
             </h1>
             <motion.p
-              className="text-white/95 max-w-xl mx-auto leading-relaxed px-1 sm:px-2 text-sm sm:text-base md:text-lg break-words font-light drop-shadow-lg"
+              className="text-white/95 max-w-xl mx-auto leading-relaxed px-1 sm:px-2 text-xs sm:text-sm md:text-base break-words font-light drop-shadow-lg"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: prefersReducedMotion ? 0 : 0.3, duration: prefersReducedMotion ? 0.4 : 1 }}
@@ -140,17 +140,17 @@ const Hero = () => {
         >
           <Link
             to="/sessionbooking"
-            className="w-full sm:w-auto px-6 py-3 sm:px-8 sm:py-4 bg-[#d4a3a3] hover:bg-[#c58989] text-white rounded-full font-medium shadow-xl hover:shadow-2xl hover:scale-[1.05] transform transition-all duration-300 text-sm sm:text-base ring-2 ring-pink-300/50 drop-shadow-lg"
+            className="w-full sm:w-auto px-6 py-3 sm:px-8 sm:py-4 bg-[#d4a3a3] hover:bg-[#c58989] text-white rounded-full font-medium shadow-xl hover:shadow-2xl hover:scale-[1.05] transform transition-all duration-300 text-xs sm:text-sm ring-2 ring-pink-300/50 drop-shadow-lg"
             style={{ textShadow: "0 2px 5px rgba(0, 0, 0, 0.5)", fontFamily: "'Poppins', sans-serif" }}
           >
-            Book Now
+            Jetzt Buchen
           </Link>
           <Link
             to="/ProgramsPage"
-            className="w-full sm:w-auto px-6 py-3 sm:px-8 sm:py-4 border-2 border-pink-300/70 text-white hover:bg-pink-900/20 hover:text-white rounded-full font-medium shadow-xl transition-all duration-300 text-sm sm:text-base backdrop-blur-sm drop-shadow-lg"
+            className="w-full sm:w-auto px-6 py-3 sm:px-8 sm:py-4 border-2 border-pink-300/70 text-white hover:bg-pink-900/20 hover:text-white rounded-full font-medium shadow-xl transition-all duration-300 text-xs sm:text-sm backdrop-blur-sm drop-shadow-lg"
             style={{ textShadow: "0 2px 5px rgba(0, 0, 0, 0.5)", fontFamily: "'Poppins', sans-serif" }}
           >
-            Explore Podcasts
+            Podcasts Entdecken
           </Link>
         </motion.div>
       </motion.div>

@@ -4,6 +4,7 @@ import MissionHeroContent from './missionherocontent';
 import MissionMediaContent from './missionmediacontent';
 import "slick-carousel/slick/slick.css"; // Ensure Slick CSS is here
 import "slick-carousel/slick/slick-theme.css";
+import { client } from "../client"; // Import Sanity client
 
 // Utility to categorize screen size
 const getDeviceCategory = (width) => {
@@ -12,12 +13,29 @@ const getDeviceCategory = (width) => {
     return 'desktop';
 };
 
+const missionQuery = '*[_type == "mission"][0]'; // Query for the mission content
+
 export default function MissionSection({ handleBookSession, handleExplorePodcasts }) {
   const [hovered, setHovered] = useState(false);
   const [deviceCategory, setDeviceCategory] = useState('desktop'); 
   const containerRef = useRef(null);
   const [scrollY, setScrollY] = useState(0);
   const isInView = useInView(containerRef, { once: true, margin: "-100px" });
+  const [missionData, setMissionData] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Fetch mission data from Sanity
+  useEffect(() => {
+    client.fetch(missionQuery)
+      .then(data => {
+        setMissionData(data);
+        setIsLoading(false);
+      })
+      .catch(err => {
+        console.error("Failed to fetch mission data:", err);
+        setIsLoading(false);
+      });
+  }, []);
 
   // 1. Device Category Check (for JS logic)
   useEffect(() => {
@@ -141,6 +159,7 @@ export default function MissionSection({ handleBookSession, handleExplorePodcast
             setHovered={setHovered}
             handleBookSession={handleBookSession}
             handleExplorePodcasts={handleExplorePodcasts}
+            content={missionData}
         />
 
         {/* RENDER CHILD 2: Media and Blog Grid */}
