@@ -2,61 +2,147 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { Mic, Video, Heart, Sparkles, Zap, Feather } from 'lucide-react';
-import { client, urlFor } from '../client'; // <-- 1. IMPORT SANITY
+import { 
+  Mic, Video, Heart, Sparkles, Zap, Feather, ArrowRight, BookOpen, Utensils, Radio 
+} from 'lucide-react';
+import { client, urlFor } from '../client'; 
 
-// 2. We keep your static header messages as a FALLBACK
-const staticHeaderMessages = [
-  'Spiritual Master & Wellness Guide',
-  'Guiding You to Inner Peace',
-  'Healing Mind, Body & Soul',
-];
+// 1. Import Language Tools
+import { useLanguage } from '../context/languagecontext';
+import { getLocalizedText } from '../utils/sanityHelper';
 
-// 3. We define a single, simple query to get all page content
-const query = `*[_type == "aboutPage"][0]`;
+// --- ICON MAPPING ---
+const ICON_MAP = {
+  mic: Mic,
+  radio: Radio,
+  food: Utensils,
+  book: BookOpen,
+  video: Video,
+  heart: Heart,
+  sparkles: Sparkles,
+  zap: Zap,
+  feather: Feather
+};
 
-// 4. We DELETE the static 'radioCareerHighlights' array
-// const radioCareerHighlights = [ ... ];
+// --- STATIC TRANSLATIONS ---
+const STATIC_TEXT = {
+  en: {
+    welcome: "Welcome to Marina",
+    heroTitle: "The Heart Behind the",
+    heroHighlight: "Healing",
+    btnBook: "Book a Session",
+    btnOffer: "Our Offerings",
+    aboutTitle: "About",
+    btnProgram: "Explore Programs",
+    pillarsTitle: "Pillars of Transformation",
+    radioTitle: "A Credible Foundation: Broadcast & Radio",
+    journeyTitle: "The Transformative Power",
+    ctaTitle: "Ready to find your inner calm?",
+    ctaDesc: "Book a one-on-one session with Marina and experience a personalized transformation — intentional, supportive, and carefully guided.",
+    ctaBtn: "Book Your Session Now",
+    loading: "Loading Story...",
+    defaultPeriod: "Date TBD",
+    defaultDesc: "No description available."
+  },
+  de: {
+    welcome: "Willkommen bei Marina",
+    heroTitle: "Das Herz hinter der",
+    heroHighlight: "Heilung",
+    btnBook: "Termin Buchen",
+    btnOffer: "Unsere Angebote",
+    aboutTitle: "Über",
+    btnProgram: "Programme entdecken",
+    pillarsTitle: "Säulen der Transformation",
+    radioTitle: "Ein Fundament des Vertrauens: Radio & Broadcast",
+    journeyTitle: "Die transformative Kraft",
+    ctaTitle: "Bereit für innere Ruhe?",
+    ctaDesc: "Buchen Sie eine persönliche Sitzung mit Marina und erleben Sie eine Transformation – achtsam, unterstützend und liebevoll geführt.",
+    ctaBtn: "Jetzt Sitzung Buchen",
+    loading: "Lade Geschichte...",
+    defaultPeriod: "Datum offen",
+    defaultDesc: "Keine Beschreibung verfügbar."
+  }
+};
 
-// Your static FeatureCard component is perfect and UNCHANGED
+const staticHeaderMessages = {
+  en: [
+    'Spiritual Master & Wellness Guide',
+    'Guiding You to Inner Peace',
+    'Healing Mind, Body & Soul',
+  ],
+  de: [
+    'Spirituelle Lehrerin & Wellness-Guide',
+    'Ihr Wegbegleiter zum inneren Frieden',
+    'Heilung für Körper, Geist & Seele',
+  ]
+};
+
+// --- QUERY (Updated for Multi-Language) ---
+const query = `*[_type == "aboutPage"][0] {
+  headerTaglines,
+  headerTaglines_de,
+  profileImage,
+  profileBio,
+  profileBio_de,
+  feature1, feature1_de,
+  feature2, feature2_de,
+  feature3, feature3_de,
+  feature4, feature4_de,
+  radioHighlights[] {
+    title, title_de,
+    period,
+    description, description_de,
+    iconKey
+  },
+  journey1, journey1_de,
+  journey2, journey2_de,
+  journeyFinalNote, journeyFinalNote_de
+}`;
+
+// --- REUSABLE CONVEX CARD ---
 const FeatureCard = ({ Icon, title, desc, delay }) => (
   <motion.div
     initial={{ opacity: 0, y: 18 }}
     whileInView={{ opacity: 1, y: 0 }}
     viewport={{ once: true, amount: 0.2 }}
     transition={{ duration: 0.7, delay }}
-    whileHover={{ scale: 1.03, translateY: -6 }}
-    className="relative overflow-hidden rounded-2xl p-6 sm:p-8 bg-white/18 backdrop-blur-md border border-white/10 shadow-lg"
+    whileHover={{ scale: 1.02, translateY: -4 }}
+    className="group relative overflow-hidden rounded-[2rem] p-8 transition-all duration-500"
+    style={{
+        backgroundColor: 'rgba(255, 255, 255, 0.4)',
+        backdropFilter: 'blur(12px)',
+        border: '1px solid rgba(255, 255, 255, 0.6)',
+        boxShadow: `
+          inset 0 0 0 1px rgba(255, 255, 255, 0.4),
+          inset 0 5px 20px rgba(255, 255, 255, 0.6),
+          0 10px 30px rgba(236, 72, 153, 0.1)
+        `
+    }}
   >
-    <div className="flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-br from-rose-400/40 to-pink-500/20 mb-4">
-      <Icon size={26} className="text-rose-800" />
+    <div className="flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-rose-100 to-pink-50 mb-6 shadow-inner group-hover:scale-110 transition-transform duration-500 border border-white/50">
+      <Icon size={28} className="text-rose-500" strokeWidth={1.5} />
     </div>
-    <h3 className="text-lg sm:text-xl font-semibold text-rose-900 mb-2">{title}</h3>
-    <p className="text-sm text-rose-700 leading-relaxed">{desc}</p>
-    <motion.div
-      initial={{ opacity: 0, x: -50 }}
-      whileHover={{ opacity: 0.06, x: 0 }}
-      transition={{ duration: 0.6 }}
-      className="pointer-events-none absolute inset-0 bg-gradient-to-r from-white to-transparent mix-blend-screen"
-    />
+    
+    <h3 className="text-xl font-bold text-rose-900 mb-3 group-hover:text-pink-600 transition-colors">
+        {title}
+    </h3>
+    
+    <p className="text-sm text-rose-800/80 leading-relaxed font-medium">
+        {desc}
+    </p>
+
+    <div className="absolute inset-0 bg-gradient-to-tr from-white/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
   </motion.div>
 );
 
 const AboutPage = () => {
-  const [headerIndex, setHeaderIndex] = useState(0);
+  const { language } = useLanguage(); // Hook into Language
+  const t = STATIC_TEXT[language];
 
-  // --- 5. ADD STATE FOR DYNAMIC DATA ---
+  const [headerIndex, setHeaderIndex] = useState(0);
   const [data, setData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  // We won't add an error state, to keep the page static-first
-  // If data fails to load, it will just show the original static text
-  
-  // --- 6. DERIVE DYNAMIC CONTENT WITH FALLBACKS (The Bulletproof part) ---
-  const headerMessages = data?.headerTaglines || staticHeaderMessages;
-  const radioHighlights = data?.radioHighlights || []; // Default to empty array
-  const pageData = data || {}; // Default to empty object
 
-  // 7. This useEffect fetches the data
   useEffect(() => {
     client
       .fetch(query)
@@ -66,307 +152,310 @@ const AboutPage = () => {
       })
       .catch((err) => {
         console.error("Failed to fetch About Page data:", err);
-        setIsLoading(false); // Let the page render with static fallbacks
+        setIsLoading(false);
       });
   }, []);
 
-  // Your original header animation hook is perfect
+  // Determine Header Messages based on Language
+  const headerMessages = (language === 'de' && data?.headerTaglines_de) 
+    ? data.headerTaglines_de 
+    : (data?.headerTaglines || staticHeaderMessages[language]);
+
   useEffect(() => {
     const t = setInterval(() => setHeaderIndex((i) => (i + 1) % headerMessages.length), 4800);
     return () => clearInterval(t);
-  }, [headerMessages]); // It now safely depends on the (dynamic or static) headerMessages
+  }, [headerMessages]);
 
-  // Your static particles are perfect
-  const particles = [
-    { id: 1, size: 90, x: 10, y: 8, delay: 0 },
-    { id: 2, size: 60, x: 80, y: 14, delay: 1.2 },
-    { id: 3, size: 40, x: 40, y: 72, delay: 0.6 },
-  ];
+  // --- HELPER: Get Feature Data safely ---
+  const getFeature = (key) => {
+    const feat = data?.[key];
+    if (!feat) return { title: "Title", description: "Description" };
+    
+    // Manual localization check because feat is an object
+    if (language === 'de' && data[`${key}_de`]) {
+        return data[`${key}_de`];
+    }
+    return feat;
+  };
+
+  if (isLoading) {
+    return (
+        <div className="min-h-screen flex items-center justify-center bg-rose-50">
+            <p className="text-rose-800 animate-pulse">{t.loading}</p>
+        </div>
+    )
+  }
 
   return (
-    <div className="min-h-screen w-full font-inter bg-gradient-to-b from-rose-50 via-pink-50 to-rose-100 text-rose-900">
+    <div className="min-h-screen w-full font-sans bg-rose-50/50 text-rose-900 overflow-hidden">
       
-      {/* HERO (Now hybrid - static design, dynamic text) */}
-      <header className="relative w-full overflow-hidden">
-        {/* All your static backgrounds and particles are unchanged */}
+      {/* GLOBAL AMBIENT BACKGROUND */}
+      <div className="fixed inset-0 bg-gradient-to-br from-rose-50 via-white to-purple-50/30 -z-50 pointer-events-none" />
+      
+      {/* --- HERO SECTION --- */}
+      <header className="relative w-full min-h-[90vh] flex items-center justify-center overflow-hidden">
         <div
-          className="absolute inset-0 bg-cover bg-center bg-fixed filter saturate-110"
+          className="absolute inset-0 bg-cover bg-center bg-fixed filter brightness-90 contrast-110"
           style={{
-            backgroundImage:
-              "url('https://images.pexels.com/photos/374754/pexels-photo-374754.jpeg?auto=format&fit=crop&q=90&w=1920&h=900')",
+            backgroundImage: "url('https://images.pexels.com/photos/374754/pexels-photo-374754.jpeg?auto=format&fit=crop&q=90&w=1920&h=900')",
           }}
-          aria-hidden
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-rose-900/45 via-rose-800/35 to-transparent mix-blend-multiply" />
-        <div className="absolute inset-0 bg-gradient-to-t from-white/10 to-transparent backdrop-blur-sm" />
-        {particles.map((p) => (
+        <div className="absolute inset-0 bg-gradient-to-b from-rose-900/60 via-rose-800/40 to-rose-900/80 mix-blend-multiply" />
+        
+        <div className="relative z-10 max-w-5xl mx-auto px-6 text-center pt-20">
           <motion.div
-            key={p.id}
             initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: [0, 0.28, 0.06], y: [0, -6, 0], scale: [1, 1.06, 1] }}
-            transition={{ repeat: Infinity, duration: 6 + p.delay, delay: p.delay }}
-            className="absolute rounded-full bg-gradient-to-br from-pink-300/40 to-rose-500/20 blur-3xl"
-            style={{ width: p.size, height: p.size, left: `${p.x}%`, top: `${p.y}%` }}
-          />
-        ))}
-
-        <div className="relative z-10 max-w-6xl mx-auto px-6 py-28 sm:py-36 lg:py-44 text-center">
-          <motion.h1
-            initial={{ opacity: 0, y: -18, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 0.9, ease: 'easeOut' }}
-            className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-['Playfair_Display'] font-extrabold tracking-tight leading-tight text-white"
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 1.2, ease: "easeOut" }}
+            className="inline-block mb-6 px-6 py-2 rounded-full border border-white/30 bg-white/10 backdrop-blur-md"
           >
-            {/* This title is static, as requested */}
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-rose-100 via-pink-200 to-white">The Heart Behind the Healing</span>
+             <span className="text-sm font-bold tracking-[0.2em] text-rose-100 uppercase">
+                {t.welcome}
+             </span>
+          </motion.div>
+
+          <motion.h1
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1, delay: 0.2 }}
+            className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-['Playfair_Display'] font-bold tracking-tight leading-tight text-white drop-shadow-lg"
+          >
+            {t.heroTitle} <br/> <span className="text-transparent bg-clip-text bg-gradient-to-r from-rose-200 via-pink-300 to-white">{t.heroHighlight}</span>
           </motion.h1>
 
-          <AnimatePresence mode="wait">
-            <motion.h3
-              key={headerIndex}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -12 }}
-              transition={{ duration: 0.6 }}
-              className="mt-4 text-md sm:text-lg md:text-xl text-rose-100/90 max-w-3xl mx-auto italic"
-            >
-              {/* This text is now dynamic */}
-              {headerMessages[headerIndex]}
-            </motion.h3>
-          </AnimatePresence>
+          <div className="h-24 sm:h-32 flex items-center justify-center mt-6">
+            <AnimatePresence mode="wait">
+              <motion.h3
+                key={headerIndex}
+                initial={{ opacity: 0, y: 20, filter: "blur(5px)" }}
+                animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                exit={{ opacity: 0, y: -20, filter: "blur(5px)" }}
+                transition={{ duration: 0.8 }}
+                className="text-lg sm:text-xl md:text-2xl text-rose-100/90 font-light italic tracking-wide"
+              >
+                {headerMessages[headerIndex]}
+              </motion.h3>
+            </AnimatePresence>
+          </div>
 
-          {/* Static buttons */}
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1.0 }}
-            className="mt-8 flex justify-center gap-4"
+            transition={{ delay: 0.8 }}
+            className="flex flex-col sm:flex-row gap-4 justify-center items-center mt-4"
           >
             <Link
               to="/sessionbooking"
-              className="relative inline-flex items-center gap-3 rounded-full px-8 py-3 bg-white/95 text-rose-800 font-semibold shadow-2xl border border-white/80 hover:scale-[1.02] transition-transform duration-300"
+              className="px-8 py-4 bg-white text-rose-900 font-bold rounded-full shadow-[0_0_20px_rgba(255,255,255,0.3)] hover:shadow-[0_0_30px_rgba(255,255,255,0.5)] hover:scale-105 transition-all duration-300"
             >
-              Book a Session
+              {t.btnBook}
             </Link>
             <Link
               to="/service"
-              className="inline-flex items-center gap-2 rounded-full px-6 py-2 bg-transparent border border-white/30 text-white/90 hover:bg-white/8 transition-colors"
+              className="px-8 py-4 bg-white/10 border border-white/30 backdrop-blur-sm text-white font-medium rounded-full hover:bg-white/20 transition-all duration-300"
             >
-              Our Offerings
+              {t.btnOffer}
             </Link>
           </motion.div>
         </div>
       </header>
 
-      {/* PROFILE + MISSION (Now hybrid) */}
-      <section className="relative -mt-16 sm:-mt-20 z-20">
+      {/* --- PROFILE + MISSION --- */}
+      <section className="relative -mt-24 z-20 pb-20">
         <div className="max-w-6xl mx-auto px-6">
           <motion.div
-            className="bg-white/18 backdrop-blur-lg border border-white/10 rounded-3xl p-6 sm:p-10 shadow-2xl"
-            initial={{ opacity: 0, y: 20 }}
+            className="relative rounded-[3rem] p-8 sm:p-12 md:p-16 overflow-hidden"
+            initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8 }}
+            style={{
+                backgroundColor: 'rgba(255, 255, 255, 0.65)',
+                backdropFilter: 'blur(30px)',
+                boxShadow: `
+                  inset 0 0 0 1px rgba(255, 255, 255, 0.8),
+                  0 30px 60px rgba(0, 0, 0, 0.1),
+                  0 10px 20px rgba(236, 72, 153, 0.05)
+                `
+            }}
           >
-            <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-12">
+            <div className="absolute top-0 right-0 w-96 h-96 bg-pink-300/20 rounded-full blur-[80px] -z-10" />
+            <div className="absolute bottom-0 left-0 w-96 h-96 bg-purple-300/10 rounded-full blur-[80px] -z-10" />
+
+            <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
               <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
+                initial={{ opacity: 0, scale: 0.9 }}
                 whileInView={{ opacity: 1, scale: 1 }}
-                whileHover={{ scale: 1.03 }}
-                transition={{ duration: 0.8 }}
-                className="relative"
+                viewport={{ once: true }}
+                className="relative flex-shrink-0"
               >
-                <div className="rounded-full p-1 bg-gradient-to-br from-rose-400 to-pink-400 shadow-[0_30px_80px_rgba(236,72,153,0.12)]">
-                  <img
-                    // DYNAMIC PROFILE IMAGE
-                    src={
-                      pageData.profileImage
-                        ? urlFor(pageData.profileImage).width(300).height(300).fit('crop').url()
-                        : "https://images.pexels.com/photos/6919996/pexels-photo-6919996.jpeg?auto=format&fit=crop&q=90&w=600&h=600"
-                    }
-                    alt="Marina"
-                    className="w-44 h-44 sm:w-56 sm:h-56 md:w-64 md:h-64 rounded-full object-cover border-4 border-white/30"
-                  />
-                </div>
-                <div className="absolute left-1/2 transform -translate-x-1/2 bottom-[-18px] w-40 h-8 rounded-full blur-xl opacity-30 bg-white/30" />
+                <div className="absolute inset-0 bg-gradient-to-tr from-rose-400 to-pink-500 rounded-full blur-2xl opacity-40 animate-pulse" />
+                <img
+                  src={
+                    data?.profileImage
+                      ? urlFor(data.profileImage).width(500).height(500).fit('crop').url()
+                      : "https://images.pexels.com/photos/6919996/pexels-photo-6919996.jpeg?auto=format&fit=crop&q=90&w=600&h=600"
+                  }
+                  alt="Marina"
+                  className="relative z-10 w-64 h-64 sm:w-80 sm:h-80 rounded-full object-cover border-[8px] border-white shadow-2xl"
+                />
               </motion.div>
 
               <div className="flex-1 text-center lg:text-left">
-                <motion.h2
-                  initial={{ opacity: 0, y: 8 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.8 }}
-                  className="text-3xl sm:text-4xl md:text-5xl font-['Playfair_Display'] font-extrabold text-rose-900"
-                >
-                  <span className="inline-block bg-clip-text text-transparent bg-gradient-to-r from-rose-900 via-pink-500 to-rose-700">MARI</span>
-                  <span className="inline-block ml-1 text-pink-500">NA</span>
-                </motion.h2>
+                <h2 className="text-4xl sm:text-5xl font-['Playfair_Display'] font-bold text-rose-950 mb-6">
+                  {t.aboutTitle} <span className="text-transparent bg-clip-text bg-gradient-to-r from-rose-500 to-pink-600">Marina</span>
+                </h2>
 
-                <motion.p
-                  initial={{ opacity: 0 }}
-                  whileInView={{ opacity: 1 }}
-                  transition={{ delay: 0.2, duration: 0.8 }}
-                  className="mt-4 text-sm sm:text-base text-rose-800 leading-relaxed max-w-2xl mx-auto lg:mx-0 italic"
-                >
-                  {/* DYNAMIC BIO TEXT */}
-                  {pageData.profileBio || "Since 2009, Marina's work at Campus & City Radio 94.4 St. Pölten has focused on fostering dialogue and human stories — building a foundation of trust, presence and impact. spiritual guidance & holistic healing at a young age. Her work combines ancient wisdom with modern practice to help you reclaim calm, clarity and presence."}
-                </motion.p>
+                <p className="text-lg text-rose-900/80 leading-relaxed font-light mb-8">
+                  {getLocalizedText(data, 'profileBio', language)}
+                </p>
 
-                {/* Static buttons */}
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  whileInView={{ opacity: 1 }}
-                  transition={{ delay: 0.35 }}
-                  className="mt-6 flex flex-col sm:flex-row items-center gap-3 justify-center lg:justify-start"
-                >
-                  <Link to="/programspage" className="text-sm px-4 py-2 rounded-full bg-rose-700/10 border border-rose-700/20 text-rose-900">Explore Programs</Link>
-                  <Link to="/contact" className="text-sm px-4 py-2 rounded-full bg-white/90 text-rose-800 shadow">Contact Marina</Link>
-                </motion.div>
+                <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
+                  <Link to="/programspage" className="group flex items-center gap-2 text-rose-700 font-bold border-b-2 border-rose-200 hover:border-rose-500 transition-all pb-1">
+                    {t.btnProgram} <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform"/>
+                  </Link>
+                </div>
               </div>
             </div>
           </motion.div>
         </div>
       </section>
 
-      {/* FEATURES GRID (Now hybrid - static icons, dynamic text) */}
-      <section className="py-16 sm:py-20">
+      {/* --- FEATURES GRID --- */}
+      <section className="py-20 bg-gradient-to-b from-transparent to-white/40">
         <div className="max-w-7xl mx-auto px-6">
-          <motion.h3
-            initial={{ opacity: 0, y: 12 }}
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="text-2xl sm:text-3xl font-['Playfair_Display'] text-rose-900 font-bold text-center mb-10"
+            className="text-center mb-16"
           >
-            Marina's Pillars of Transformation
-          </motion.h3>
+            <h3 className="text-3xl sm:text-4xl font-['Playfair_Display'] font-bold text-rose-950 mb-3">
+               {t.pillarsTitle}
+            </h3>
+            <div className="w-20 h-1 bg-pink-400 mx-auto rounded-full" />
+          </motion.div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             <FeatureCard 
               Icon={Mic} 
-              title={pageData.feature1?.title || "Audio Therapies"}
-              desc={pageData.feature1?.description || "Guided meditations and sound baths to soothe the nervous system."}
-              delay={0.05} 
+              title={getFeature('feature1').title}
+              desc={getFeature('feature1').description}
+              delay={0.1} 
             />
             <FeatureCard 
               Icon={Video} 
-              title={pageData.feature2?.title || "Video Journeys"}
-              desc={pageData.feature2?.description || "Visualizations for deep mindfulness and self-discovery."}
-              delay={0.15} 
+              title={getFeature('feature2').title}
+              desc={getFeature('feature2').description}
+              delay={0.2} 
             />
             <FeatureCard 
               Icon={Heart} 
-              title={pageData.feature3?.title || "Inner Healing"}
-              desc={pageData.feature3?.description || "Emotional release, energy work and heart-centered awareness."}
-              delay={0.25} 
+              title={getFeature('feature3').title}
+              desc={getFeature('feature3').description}
+              delay={0.3} 
             />
             <FeatureCard 
               Icon={Sparkles} 
-              title={pageData.feature4?.title || "Spiritual Clarity"}
-              desc={pageData.feature4?.description || "Practical wisdom to ground your spirit and illuminate the path."}
-              delay={0.35} 
+              title={getFeature('feature4').title}
+              desc={getFeature('feature4').description}
+              delay={0.4} 
             />
           </div>
         </div>
       </section>
 
-      {/* RADIO CAREER (Now hybrid - static title, dynamic content) */}
-      <section className="py-12 sm:py-16 bg-rose-50">
+      {/* --- RADIO CAREER --- */}
+      <section className="py-20">
         <div className="max-w-7xl mx-auto px-6">
-          <motion.h3
-            initial={{ opacity: 0, y: 10 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="text-2xl sm:text-3xl text-rose-900 font-bold text-center mb-8"
-          >
-            A Credible Foundation: Broadcast & Radio
-          </motion.h3>
+          <h3 className="text-3xl font-['Playfair_Display'] font-bold text-center text-rose-950 mb-12">
+            {t.radioTitle}
+          </h3>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* DYNAMIC RADIO HIGHLIGHTS */}
-            {radioHighlights.map((r, idx) => (
-              <motion.article
-                key={idx} // Using 'idx' is okay here as the list is static
-                initial={{ opacity: 0, y: 10 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.08 * idx }}
-                className="p-6 rounded-xl bg-white shadow-xl border-t-4 border-rose-500"
-              >
-                <div className="text-4xl mb-3">{r.icon || '🎙️'}</div>
-                <h4 className="text-lg font-semibold text-rose-900">{r.title || "Untitled Program"}</h4>
-                <div className="text-sm font-medium text-rose-700 mt-2">{r.period || "Date TBD"}</div>
-                <p className="mt-3 text-sm text-rose-700 leading-relaxed">{r.description || "No description."}</p>
-              </motion.article>
-            ))}
-          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {(data?.radioHighlights || []).map((r, idx) => {
+              // Manual localization check for array items
+              const title = (language === 'de' && r.title_de) ? r.title_de : r.title;
+              const desc = (language === 'de' && r.description_de) ? r.description_de : r.description;
+              const IconComponent = ICON_MAP[r.iconKey] || Mic; 
 
-          <p className="mt-8 text-center text-sm text-rose-700 italic max-w-3xl mx-auto">
-            {/* DYNAMIC BIO TEXT (REUSED) */}
-            {pageData.profileBio || "Since 2009, Marina's work at Campus & City Radio 94.4 St. Pölten has focused on fostering dialogue and human stories — building a foundation of trust, presence and impact."}
-          </p>
-        </div>
-      </section>
+              return (
+                <motion.article
+                  key={idx}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 * idx }}
+                  className="group bg-white/40 backdrop-blur-md border border-white/60 p-8 rounded-[2rem] shadow-sm hover:shadow-lg hover:shadow-pink-100 transition-all duration-300 hover:-translate-y-1"
+                >
+                  <div className="w-14 h-14 rounded-2xl bg-rose-100 flex items-center justify-center mb-6 group-hover:bg-rose-200 transition-colors">
+                     <IconComponent className="w-7 h-7 text-rose-600" strokeWidth={1.5} />
+                  </div>
 
-      {/* IN-DEPTH JOURNEY (Now hybrid - static icons/title, dynamic text) */}
-      <section className="py-16 sm:py-20">
-        <div className="max-w-6xl mx-auto px-6">
-          <motion.h3 initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }} className="text-2xl sm:text-3xl font-bold text-center text-rose-900 mb-8">
-            The Transformative Power
-          </motion.h3>
-
-          <div className="space-y-6">
-            <motion.div className="flex items-start gap-4 p-5 rounded-2xl bg-white/14 border-l-8 border-rose-700 shadow-md" initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }}>
-              <Zap size={22} className="text-rose-700 mt-1" />
-              <div>
-                <h4 className="font-semibold text-rose-900">
-                  {pageData.journey1?.title || "Empowerment Through Breath"}
-                </h4>
-                <p className="text-sm text-rose-700 leading-relaxed">
-                  {pageData.journey1?.description || "Signature breathwork techniques designed to release held stress and unlock the body's natural flow — leading to immediate emotional relief and clarity."}
-                </p>
-              </div>
-            </motion.div>
-
-            <motion.div className="flex items-start gap-4 p-5 rounded-2xl bg-white/14 border-l-8 border-rose-700 shadow-md" initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.06 }}>
-              <Feather size={22} className="text-rose-700 mt-1" />
-              <div>
-                <h4 className="font-semibold text-rose-900">
-                  {pageData.journey2?.title || "Visualizations for Lasting Change"}
-                </h4>
-                <p className="text-sm text-rose-700 leading-relaxed">
-                  {pageData.journey2?.description || "Guided visualizations to reprogram old patterns and manifest a life aligned with your highest self — change starts within."}
-                </p>
-              </div>
-            </motion.div>
-
-            <motion.p initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} transition={{ duration: 0.7, delay: 0.12 }} className="text-center text-sm text-rose-700 italic">
-              {pageData.journeyFinalNote || "Join a global community and take the next step on your path toward balance, joy and deeper meaning."}
-            </motion.p>
+                  <h4 className="text-xl font-bold text-rose-900 mb-2">{title || "Untitled"}</h4>
+                  
+                  <div className="inline-block px-3 py-1 bg-white/60 rounded-full text-xs font-bold text-pink-600 mb-4 tracking-wide uppercase border border-pink-100">
+                      {r.period || t.defaultPeriod}
+                  </div>
+                  
+                  <p className="text-sm text-rose-800/80 leading-relaxed font-medium">
+                      {desc || t.defaultDesc}
+                  </p>
+                </motion.article>
+              )
+            })}
           </div>
         </div>
       </section>
 
-      {/* CTA (Static) */}
-      <section className="py-12 sm:py-16 bg-gradient-to-r from-rose-300 to-pink-300 text-white">
-        <div className="max-w-5xl mx-auto px-6 text-center">
-          <motion.h3 initial={{ opacity: 0, y: 8 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }} className="text-2xl sm:text-3xl font-['Playfair_Display'] font-bold mb-4">Ready to find your inner calm?</motion.h3>
-          <p className="max-w-2xl mx-auto text-sm sm:text-base mb-6 opacity-95">Book a one-on-one session with Marina and experience a personalized transformation — intentional, supportive, and carefully guided.</p>
-          <div className="relative inline-block">
-            <motion.div
-              aria-hidden
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: [0.95, 1.06, 0.98], opacity: [0.08, 0.16, 0.06] }}
-              transition={{ repeat: Infinity, duration: 2.6 }}
-              className="absolute inset-0 rounded-full blur-3xl bg-gradient-to-r from-rose-400 to-pink-400 opacity-30"
-            />
-            <Link to="/sessionbooking" className="relative inline-flex items-center px-10 py-3 rounded-full bg-white/95 text-rose-900 font-semibold shadow-2xl border border-white/80">Book Your Session Now</Link>
-          </div>
+      {/* --- JOURNEY SECTION --- */}
+      <section className="py-20 bg-rose-900 text-rose-50 relative overflow-hidden">
+        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10" />
+        <div className="max-w-6xl mx-auto px-6 relative z-10">
+            <h3 className="text-3xl font-['Playfair_Display'] font-bold text-center mb-12">
+                {t.journeyTitle}
+            </h3>
+            
+            <div className="grid md:grid-cols-2 gap-8">
+                <div className="bg-white/10 backdrop-blur-md p-8 rounded-3xl border border-white/10 hover:bg-white/15 transition-colors">
+                    <Zap className="w-8 h-8 text-pink-300 mb-4" strokeWidth={1.5} />
+                    <h4 className="text-xl font-bold mb-3">{getFeature('journey1').title}</h4>
+                    <p className="text-rose-100/80 leading-relaxed">
+                        {getFeature('journey1').description}
+                    </p>
+                </div>
+                
+                <div className="bg-white/10 backdrop-blur-md p-8 rounded-3xl border border-white/10 hover:bg-white/15 transition-colors">
+                    <Feather className="w-8 h-8 text-pink-300 mb-4" strokeWidth={1.5} />
+                    <h4 className="text-xl font-bold mb-3">{getFeature('journey2').title}</h4>
+                    <p className="text-rose-100/80 leading-relaxed">
+                        {getFeature('journey2').description}
+                    </p>
+                </div>
+            </div>
+
+            <p className="text-center mt-12 text-rose-200 italic font-light opacity-80 max-w-2xl mx-auto">
+                {getLocalizedText(data, 'journeyFinalNote', language)}
+            </p>
         </div>
       </section>
 
-      {/* Footer (Static) */}
-      <footer className="py-10 text-center text-sm text-rose-700">
-        © {new Date().getFullYear()} Marina — All rights reserved.
-      </footer>
+      {/* --- CTA --- */}
+      <section className="py-20 text-center relative">
+         <div className="absolute inset-0 bg-gradient-to-t from-white to-transparent -z-10" />
+         <h3 className="text-3xl sm:text-4xl font-['Playfair_Display'] font-bold text-rose-950 mb-6">
+             {t.ctaTitle}
+         </h3>
+         <p className="text-rose-800/70 max-w-xl mx-auto mb-8">
+             {t.ctaDesc}
+         </p>
+         
+         <Link 
+            to="/sessionbooking"
+            className="relative inline-flex items-center justify-center px-10 py-4 bg-gradient-to-r from-rose-500 to-pink-500 text-white font-bold rounded-full shadow-lg shadow-pink-500/30 hover:shadow-pink-500/50 hover:-translate-y-1 transition-all duration-300"
+         >
+            {t.ctaBtn}
+         </Link>
+      </section>
+
     </div>
   );
 };

@@ -15,7 +15,7 @@ function App() {
   return (
    // Root Body: Fixed Background Image and Color
     <div 
-      className="min-h-screen w-full p-0 flex flex-col items-center text-text-dark"
+      className="min-h-screen w-full"
       style={{
         backgroundImage: `url(${Bg2})`,
         backgroundSize: 'cover', 

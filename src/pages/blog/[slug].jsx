@@ -2,33 +2,61 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link, useParams } from 'react-router-dom';
-import { client, urlFor } from '../../client'; // <-- 1. IMPORT SANITY
-import { PortableText } from '@portabletext/react'; // <-- 2. IMPORT THE RENDERER
+import { client, urlFor } from '../../client'; 
+import { PortableText } from '@portabletext/react'; 
 
-// 3. This is ONE query to get EVERYTHING: the post AND related posts
+// 1. Import Language Tools
+import { useLanguage } from '../../context/languagecontext';
+import { getLocalizedText } from '../../utils/sanityhelper';
+
+// --- STATIC TRANSLATIONS ---
+const STATIC_TEXT = {
+  en: {
+    backLink: "Back to Journal",
+    relatedTitle: "Related Posts",
+    loading: "Loading Post...",
+    notFound: "Post Not Found",
+    notFoundDesc: "The article you are looking for does not exist or has been moved.",
+    by: "By",
+    on: "on",
+    readMore: "Read Article"
+  },
+  de: {
+    backLink: "Zurück zum Journal",
+    relatedTitle: "Ähnliche Beiträge",
+    loading: "Beitrag wird geladen...",
+    notFound: "Beitrag nicht gefunden",
+    notFoundDesc: "Der gesuchte Artikel existiert nicht oder wurde verschoben.",
+    by: "Von",
+    on: "am",
+    readMore: "Artikel lesen"
+  }
+};
+
+// --- QUERY (Updated for Multi-Language) ---
 const query = `*[_type == "post" && slug.current == $slug][0] {
   title,
-  "authorName": author->name, // Get the author's name
+  title_de, // German Title
+  "authorName": author->name,
   publishedAt,
   mainImage,
-  body, // This is your 'fullContent' as Portable Text
+  body, 
+  body_de,  // German Content (Portable Text)
   "slug": slug.current,
-  // This sub-query gets 3 related posts, excluding the current one
   "relatedPosts": *[_type == "post" && slug.current != $slug] | order(publishedAt desc)[0...3] {
     _id,
     title,
+    title_de,
     excerpt,
+    excerpt_de,
     mainImage,
     "slug": slug.current
   }
 }`;
 
-// 4. We DELETE the static 'blogPosts' array
-// const blogPosts = [ ... ];
-
-// This is a helper to format the date from Sanity
-const formatDate = (dateString) => {
-  return new Date(dateString).toLocaleDateString('en-US', {
+// Helper to format date based on locale
+const formatDate = (dateString, locale) => {
+  return new Date(dateString).toLocaleDateString(locale === 'de' ? 'de-DE' : 'en-US', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
@@ -36,23 +64,25 @@ const formatDate = (dateString) => {
 };
 
 const BlogPostPage = () => {
-  const { slug } = useParams(); // Gets the "embracing-mindfulness" from the URL
+  const { slug } = useParams();
+  const { language } = useLanguage(); // Hook into Language
+  const t = STATIC_TEXT[language];
+
   const [post, setPost] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    // This runs when the 'slug' changes
     setIsLoading(true);
-    setPost(null); // Clear the old post
+    setPost(null);
     
     client
-      .fetch(query, { slug }) // Pass the 'slug' from the URL into the query
+      .fetch(query, { slug })
       .then((data) => {
         if (data) {
           setPost(data);
         } else {
-          setError('Post not found'); // Set a specific error if no post matches
+          setError('Post not found');
         }
         setIsLoading(false);
       })
@@ -63,8 +93,9 @@ const BlogPostPage = () => {
       });
     
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [slug]); // Re-run this hook if the slug changes
+  }, [slug]);
 
+  // --- ANIMATION VARIANTS ---
   const containerVariants = {
     hidden: { opacity: 0, y: 50 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: 'easeOut' } },
@@ -74,182 +105,187 @@ const BlogPostPage = () => {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.6 } },
   };
-  
-  // --- 5. LOADING, ERROR, AND 404 HANDLING (Professional Approach) ---
 
-  // This renders your static layout, but with a loader *inside* the content box
-  // This is exactly what you requested!
+  // --- RENDER LOGIC ---
   const renderContent = () => {
     if (isLoading) {
       return (
         <div className="flex flex-col items-center justify-center py-20">
-  <p className="text-rose-900 font-semibold text-lg animate-pulse">
-    Loading Post<span className="animate-ping text-rose-500">...</span>
-  </p>
-</div>
-
+          <div className="w-12 h-12 border-4 border-rose-200 border-t-rose-500 rounded-full animate-spin mb-4" />
+          <p className="text-rose-900 font-medium animate-pulse">{t.loading}</p>
+        </div>
       );
     }
 
-    // This renders your beautiful "404" page if the post is not found
     if (error || !post) {
       return (
-        <div className="font-['Playfair_Display'] text-center py-10">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-rose-900 mb-4 tracking-tight">
-            404 - Post Not Found
+        <div className="font-sans text-center py-10">
+          <h1 className="text-3xl sm:text-4xl font-bold text-rose-900 mb-4">
+            {t.notFound}
           </h1>
-          <p className="text-sm sm:text-base md:text-lg text-gray-800">
-            {error || "The blog post you are looking for does not exist."}
+          <p className="text-rose-800/70 mb-8">
+            {t.notFoundDesc}
           </p>
           <Link
             to="/blog"
-            className="mt-6 inline-block px-8 sm:px-10 py-3 sm:py-4 bg-gradient-to-r from-rose-600 to-pink-600 text-white rounded-xl shadow-xl font-semibold text-sm sm:text-base hover:from-pink-700 hover:to-rose-700 transition-all duration-300"
+            className="inline-block px-8 py-3 bg-rose-500 text-white rounded-full font-medium shadow-lg shadow-rose-500/30 hover:bg-rose-600 transition-all"
           >
-            Back to Blog
+            {t.backLink}
           </Link>
         </div>
       );
     }
 
-    // --- 6. SUCCESS STATE (Render the Post) ---
+    // Determine which body content to render
+    // Note: For PortableText, getLocalizedText might need adjustment if it expects simple strings.
+    // Here we do it manually for the body since it's an array of blocks.
+    const contentBody = (language === 'de' && post.body_de) ? post.body_de : post.body;
+
     return (
       <motion.div
         variants={containerVariants}
         initial="hidden"
         animate="visible"
-        viewport={{ once: true, amount: 0.2 }}
+        viewport={{ once: true }}
       >
-        {/* POST HERO IMAGE (Now dynamic and safe) */}
-        <div className="relative w-full h-64 sm:h-80 md:h-96 overflow-hidden rounded-xl mb-8">
+        {/* POST HERO IMAGE */}
+        <div className="relative w-full h-64 sm:h-80 md:h-96 overflow-hidden rounded-2xl mb-8 shadow-md">
           <img
             src={
               post.mainImage
-                ? urlFor(post.mainImage).width(1000).url()
+                ? urlFor(post.mainImage).width(1200).url()
                 : "https://via.placeholder.com/1000x500?text=Missing+Image"
             }
-            alt={post.title || "Blog post image"}
-            className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+            alt={getLocalizedText(post, 'title', language)}
+            className="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
           />
         </div>
 
         <motion.h1
-          className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-rose-900 mb-4 tracking-tight"
+          className="text-3xl sm:text-4xl md:text-5xl font-['Playfair_Display'] font-bold text-rose-950 mb-4 leading-tight"
           variants={itemVariants}
         >
-          {post.title || "Untitled Post"}
+          {getLocalizedText(post, 'title', language)}
         </motion.h1>
+        
         <motion.div
-          className="text-gray-800 text-sm sm:text-base mb-6 italic"
+          className="flex items-center gap-2 text-rose-800/70 text-sm sm:text-base mb-8 font-medium"
           variants={itemVariants}
         >
-          By <span className="font-semibold text-rose-800">{post.authorName || "Marina"}</span> on {post.publishedAt ? formatDate(post.publishedAt) : "Date not available"}
+          <span>{t.by} <span className="text-rose-600">{post.authorName || "Marina"}</span></span>
+          <span>•</span>
+          <span>{post.publishedAt ? formatDate(post.publishedAt, language) : ""}</span>
         </motion.div>
 
-        {/* 7. THIS IS THE BIGGEST CHANGE ---
-            We use <PortableText> to safely render the rich text content.
-            This replaces 'dangerouslySetInnerHTML' and is 100% production-safe.
-        */}
+        {/* RICH TEXT CONTENT */}
         <motion.div
-          className="prose prose-lg max-w-none text-gray-800 leading-relaxed"
+          className="prose prose-lg prose-rose max-w-none text-gray-700 leading-relaxed"
           variants={itemVariants}
         >
-          {post.body ? (
-            <PortableText value={post.body} />
+          {contentBody ? (
+            <PortableText value={contentBody} />
           ) : (
-            <p>This post has no content yet.</p>
+            <p className="italic text-gray-500">
+              {language === 'de' ? "Inhalt folgt bald..." : "Content coming soon..."}
+            </p>
           )}
         </motion.div>
 
         <motion.div
-          className="flex justify-between items-center mt-12 pt-6 border-t border-pink-200/50"
+          className="flex justify-between items-center mt-12 pt-8 border-t border-rose-200/50"
           variants={itemVariants}
         >
           <Link
             to="/blog"
-            className="text-rose-800 font-semibold text-sm sm:text-base hover:text-rose-600 transition-all duration-300"
+            className="text-rose-600 font-semibold text-sm sm:text-base hover:text-rose-800 transition-all flex items-center gap-2 group"
           >
-            &larr; Back to All Posts
+            <span className="group-hover:-translate-x-1 transition-transform">←</span> {t.backLink}
           </Link>
         </motion.div>
       </motion.div>
     );
   };
   
-  // --- RENDER FUNCTION ---
-  // The static parts of your page load instantly
   return (
-    <motion.div
-      className="font-['Playfair_Display'] bg-gradient-to-b from-pink-200 via-rose-200 to-pink-300 min-h-screen pt-20"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6 }}
-    >
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-5xl">
-        {/* The main content box renders the loading/error/success state */}
-        <div className="p-6 sm:p-10 rounded-3xl bg-white/25 backdrop-blur-xl shadow-xl border border-white/30">
+    <div className="font-sans bg-rose-50/50 min-h-screen pt-24 pb-20 relative overflow-hidden">
+      
+      {/* GLOBAL AMBIENT BACKGROUND */}
+      <div className="fixed inset-0 bg-gradient-to-br from-rose-50 via-white to-purple-50/30 -z-50 pointer-events-none" />
+      <div className="absolute top-0 left-0 w-[40rem] h-[40rem] bg-pink-300/10 rounded-full blur-[100px] pointer-events-none -z-10" />
+      <div className="absolute bottom-0 right-0 w-[40rem] h-[40rem] bg-purple-300/10 rounded-full blur-[100px] pointer-events-none -z-10" />
+
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-4xl">
+        
+        {/* Main Content Card (Convex Glass) */}
+        <div 
+          className="p-8 sm:p-12 rounded-[2.5rem] mb-16"
+          style={{
+            backgroundColor: 'rgba(255, 255, 255, 0.65)',
+            backdropFilter: 'blur(20px)',
+            border: '1px solid rgba(255, 255, 255, 0.8)',
+            boxShadow: `
+              inset 0 0 0 1px rgba(255, 255, 255, 0.5),
+              0 20px 60px rgba(236, 72, 153, 0.1)
+            `
+          }}
+        >
           {renderContent()}
         </div>
 
-        {/* RELATED POSTS SECTION (Now dynamic and safe) */}
-        {/* We only show this section if the main post loaded successfully */}
-        {post && post.relatedPosts && (
+        {/* RELATED POSTS SECTION */}
+        {post && post.relatedPosts && post.relatedPosts.length > 0 && (
           <motion.section
-            className="py-12 sm:py-16 md:py-20"
             initial="hidden"
             whileInView="visible"
-            viewport={{ once: true, amount: 0.2 }}
+            viewport={{ once: true }}
             variants={containerVariants}
           >
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-rose-900 mb-8 text-center tracking-tight">
-              Related Posts
+            <h2 className="text-3xl font-['Playfair_Display'] font-bold text-rose-950 mb-10 text-center">
+              {t.relatedTitle}
             </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
               {post.relatedPosts.map((relatedPost) => (
                 <motion.div
                   key={relatedPost._id}
-                  className="p-4 sm:p-6 rounded-2xl bg-white/25 backdrop-blur-lg shadow-lg border border-white/30 hover:border-pink-400/50 transition-all duration-300 overflow-hidden"
                   variants={itemVariants}
-                  whileHover={{
-                    scale: 1.03,
-                    y: -5,
-                    boxShadow: "0 10px 20px rgba(236, 72, 153, 0.3)",
-                    transition: { type: "spring", stiffness: 300 },
-                  }}
+                  whileHover={{ y: -5 }}
+                  className="group flex flex-col rounded-[2rem] overflow-hidden bg-white/40 backdrop-blur-md border border-white/60 hover:shadow-xl hover:shadow-rose-500/10 transition-all duration-500"
                 >
-                  <div className="relative w-full h-48 sm:h-56 overflow-hidden rounded-xl mb-4">
+                  <div className="relative h-48 overflow-hidden">
                     <img
                       src={
                         relatedPost.mainImage
-                          ? urlFor(relatedPost.mainImage).width(400).url()
+                          ? urlFor(relatedPost.mainImage).width(400).height(300).url()
                           : "https://via.placeholder.com/400x300?text=Missing+Image"
                       }
-                      alt={relatedPost.title || "Related post image"}
-                      loading="lazy"
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                      alt={getLocalizedText(relatedPost, 'title', language)}
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                     />
+                    <div className="absolute inset-0 bg-gradient-to-t from-rose-900/40 to-transparent opacity-60" />
                   </div>
-                  <h3 className="text-lg sm:text-xl font-semibold text-rose-900 mb-3 tracking-tight">
-                    {relatedPost.title || "Untitled Post"}
-                  </h3>
-                  <p className="text-gray-800 text-sm sm:text-base leading-relaxed mb-4">
-                    {relatedPost.excerpt || "No summary available."}
-                  </p>
-                  <Link to={`/blog/${relatedPost.slug}`}>
-                    <motion.button
-                      className="w-full py-2 sm:py-3 bg-rose-300 text-white rounded-xl shadow-md font-medium text-sm sm:text-base hover:from-pink-700 hover:to-rose-700 transition-all"
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      Read More
-                    </motion.button>
-                  </Link>
+                  
+                  <div className="p-6 flex flex-col flex-1">
+                    <h3 className="text-lg font-bold text-rose-900 mb-2 line-clamp-2 group-hover:text-rose-600 transition-colors">
+                      {getLocalizedText(relatedPost, 'title', language)}
+                    </h3>
+                    <p className="text-sm text-rose-800/70 line-clamp-3 mb-4 flex-grow">
+                      {getLocalizedText(relatedPost, 'excerpt', language)}
+                    </p>
+                    
+                    <Link to={`/blog/${relatedPost.slug}`}>
+                      <span className="text-xs font-bold text-rose-500 uppercase tracking-wider border-b border-rose-200 pb-1 group-hover:border-rose-500 transition-all">
+                        {t.readMore}
+                      </span>
+                    </Link>
+                  </div>
                 </motion.div>
               ))}
             </div>
           </motion.section>
         )}
       </div>
-    </motion.div>
+    </div>
   );
 };
 

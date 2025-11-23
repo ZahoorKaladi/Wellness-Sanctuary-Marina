@@ -10,13 +10,53 @@ import {
   Mail,
   Phone,
   MapPin,
+  ArrowRight,
+  Sparkles
 } from "lucide-react";
-import { client } from '../client'; // <-- 1. IMPORT SANITY CLIENT
+import { client } from '../client';
 
-// 2. This query fetches *only* your new 'footer' document
+// 1. Import Language Context & Helper
+import { useLanguage } from "../context/languagecontext";
+import { getLocalizedText } from "../utils/sanityhelper";
+
+// --- STATIC TRANSLATIONS ---
+const STATIC_TEXT = {
+  en: {
+    aboutTitle: "About Marina",
+    exploreTitle: "Explore",
+    contactTitle: "Contact",
+    newsletterTitle: "Stay Mindful",
+    newsletterSubtitle: "Join our community for weekly tips and gentle reminders.",
+    subscribe: "Subscribe",
+    rights: "All Rights Reserved.",
+    menu: {
+      home: "Home",
+      about: "About Us",
+      services: "Services",
+      journal: "Journal",
+      contact: "Contact"
+    }
+  },
+  de: {
+    aboutTitle: "Über Marina",
+    exploreTitle: "Erkunden",
+    contactTitle: "Kontakt",
+    newsletterTitle: "Achtsam bleiben",
+    newsletterSubtitle: "Treten Sie unserer Community bei für wöchentliche Tipps.",
+    subscribe: "Abonnieren",
+    rights: "Alle Rechte vorbehalten.",
+    menu: {
+      home: "Startseite",
+      about: "Über uns",
+      services: "Angebote",
+      journal: "Journal",
+      contact: "Kontakt"
+    }
+  }
+};
+
 const query = `*[_type == "footer"][0]`;
 
-// 3. We create a map of icons to make the code cleaner
 const socialIcons = {
   socialInstagram: Instagram,
   socialLinkedin: Linkedin,
@@ -26,47 +66,70 @@ const socialIcons = {
 };
 
 const Footer = () => {
-  // 4. Add state for your dynamic data
   const [data, setData] = useState(null);
-  // We don't need a loader, the footer can just show fallbacks
+  const { language } = useLanguage(); // Get current language
+  const t = STATIC_TEXT[language];    // Get translations for current language
 
   useEffect(() => {
     client.fetch(query)
       .then((data) => setData(data))
       .catch((err) => console.error("Failed to fetch footer data:", err));
-  }, []); // Runs once
+  }, []);
 
-  // 5. Create a dynamic list of social links to render
-  // This is "bulletproof" - it checks if 'data' exists first
   const socialLinks = data ? [
     { key: 'socialInstagram', href: data.socialInstagram },
     { key: 'socialLinkedin', href: data.socialLinkedin },
     { key: 'socialFacebook', href: data.socialFacebook },
     { key: 'socialTwitter', href: data.socialTwitter },
     { key: 'socialYoutube', href: data.socialYoutube },
-  ].filter(link => link.href) // Only show icons if a link was entered
-  : []; // Default to an empty array
+  ].filter(link => link.href) : [];
 
   return (
-    <footer className="relative bg-gradient-to-b from-rose-200 via-pink-300 to-rose-400 text-gray-800 font-sans overflow-hidden">
-      {/* Static design elements are unchanged */}
-      <div className="absolute inset-0 bg-white/20 backdrop-blur-sm"></div>
-      <div className="absolute top-[-15%] right-[-15%] w-80 h-80 bg-pink-400/20 rounded-full blur-[120px] md:w-96 md:h-96"></div>
-      <div className="absolute bottom-[-15%] left-[-15%] w-80 h-80 bg-rose-400/20 rounded-full blur-[120px] md:w-96 md:h-96"></div>
+    <footer 
+      className="relative pt-20 pb-10 overflow-hidden font-sans mt-20"
+      style={{
+        // THE CONVEX DEEP GLASS STYLE
+        backgroundColor: 'rgba(159, 18, 57, 0.85)', // Deep Rose Base
+        backdropFilter: 'blur(20px)',
+        borderTop: '1px solid rgba(255, 255, 255, 0.4)',
+        boxShadow: `
+            inset 0 1px 0 0 rgba(255, 255, 255, 0.3),
+            0 -10px 40px rgba(236, 72, 153, 0.15)
+        `
+      }}
+    >
+      {/* 1. Ambient Background Glows */}
+      <div className="absolute inset-0 bg-gradient-to-b from-rose-900/50 to-rose-950/80 -z-20" />
+      <div className="absolute -top-40 -left-40 w-96 h-96 bg-pink-500/30 rounded-full blur-[120px] pointer-events-none mix-blend-screen" />
+      <div className="absolute -top-40 -right-40 w-96 h-96 bg-purple-500/30 rounded-full blur-[120px] pointer-events-none mix-blend-screen" />
+      
+      {/* 2. Inner Highlight Gradient */}
+      <div className="absolute inset-0 bg-gradient-to-b from-white/10 to-transparent pointer-events-none -z-10" />
 
-      <div className="relative container mx-auto px-4 py-10 sm:py-12 md:py-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
+      <div className="relative container mx-auto px-6 lg:px-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-12 text-white">
 
-        {/* About Marina (Now Dynamic) */}
-        <div className="space-y-4">
-          <h3 className="text-xl sm:text-2xl font-bold mb-3 relative after:content-[''] after:absolute after:w-10 after:h-[2px] after:bg-pink-500 after:bottom-0 after:left-0">
-            About Marina
-          </h3>
-          <p className="text-xs sm:text-sm opacity-80 leading-relaxed">
-            {/* 6. Dynamic text with fallback */}
-            {data?.footerBio || "Reconnect with inner peace through mindfulness and holistic wellness guidance."}
+        {/* --- COLUMN 1: ABOUT --- */}
+        <div className="space-y-6">
+          <div>
+             <div className="flex items-center gap-2 mb-2">
+                <Sparkles className="w-5 h-5 text-pink-300" />
+                <h3 className="text-2xl font-['Playfair_Display'] italic font-bold">
+                  {t.aboutTitle}
+                </h3>
+             </div>
+             <div className="h-1 w-12 bg-pink-400 rounded-full shadow-[0_0_10px_rgba(244,114,182,0.6)]" />
+          </div>
+          
+          <p className="text-sm text-rose-100/80 leading-relaxed font-light">
+            {/* Use helper to get localized bio if available, otherwise fallback to English */}
+            {getLocalizedText(data, 'footerBio', language) || 
+             (language === 'de' 
+               ? "Finden Sie inneren Frieden durch Achtsamkeit und ganzheitliche Wellness-Beratung. Beginnen Sie Ihre Reise zu einem ausgeglichenen Leben."
+               : "Reconnect with inner peace through mindfulness and holistic wellness guidance. Embrace your journey to a balanced life.")}
           </p>
-          <div className="flex gap-2 sm:gap-3 mt-4">
-            {/* 7. Dynamic Social Links */}
+
+          {/* Glass Social Buttons */}
+          <div className="flex gap-3">
             {socialLinks.map((link) => {
               const Icon = socialIcons[link.key];
               return (
@@ -75,93 +138,115 @@ const Footer = () => {
                   href={link.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-full bg-white/20 hover:bg-pink-500/50 transition-all duration-300 hover:scale-110"
+                  className="w-10 h-10 flex items-center justify-center rounded-full 
+                             bg-white/10 border border-white/20 hover:bg-white/20 hover:border-white/40
+                             transition-all duration-300 hover:scale-110 hover:shadow-lg hover:shadow-pink-500/20"
                   aria-label={`${link.key.replace('social', '')} link`}
                 >
-                  <Icon size={16} className="text-pink-600" />
+                  <Icon size={18} className="text-pink-200" />
                 </a>
               )
             })}
           </div>
         </div>
 
-        {/* Explore (Static - this is correct) */}
-        <div className="space-y-3">
-          <h3 className="text-xl sm:text-2xl font-bold mb-3 relative after:content-[''] after:absolute after:w-10 after:h-[2px] after:bg-pink-500 after:bottom-0 after:left-0">
-            Explore
-          </h3>
-          <ul className="space-y-2 text-xs sm:text-sm">
+        {/* --- COLUMN 2: EXPLORE --- */}
+        <div className="space-y-6">
+          <div>
+            <h3 className="text-xl font-bold font-serif">{t.exploreTitle}</h3>
+            <div className="h-0.5 w-8 bg-white/30 mt-2 rounded-full" />
+          </div>
+          <ul className="space-y-3 text-sm text-rose-100/80">
             {[
-              { to: "/", label: "Home" },
-              { to: "/about", label: "About" },
-              { to: "/services", label: "Services" },
-              // { to: "/testimonials", label: "Testimonials" },
-              { to: "/blog", label: "Blog" },
-              { to: "/contact", label: "Contact" },
+              { to: "/", label: t.menu.home },
+              { to: "/about", label: t.menu.about },
+              { to: "/service", label: t.menu.services },
+              { to: "/blog", label: t.menu.journal },
+              { to: "/contact", label: t.menu.contact },
             ].map((item, i) => (
               <li key={i}>
                 <Link
                   to={item.to}
-                  className="hover:text-pink-600 transition-all duration-300 hover:translate-x-1 inline-block"
+                  className="group flex items-center gap-2 hover:text-white transition-all duration-300"
                 >
-                  {item.label}
+                  <span className="w-1.5 h-1.5 rounded-full bg-pink-400/0 group-hover:bg-pink-400 transition-all" />
+                  <span className="group-hover:translate-x-1 transition-transform">{item.label}</span>
                 </Link>
               </li>
             ))}
           </ul>
         </div>
 
-        {/* Contact (Now Dynamic) */}
-        <div className="space-y-3">
-          <h3 className="text-xl sm:text-2xl font-bold mb-3 relative after:content-[''] after:absolute after:w-10 after:h-[2px] after:bg-pink-500 after:bottom-0 after:left-0">
-            Contact
-          </h3>
-          <ul className="space-y-2 text-xs sm:text-sm">
-            <li className="flex items-center gap-2">
-              <MapPin className="text-pink-600" size={16} />
-              <span>{data?.contactAddress || "Dubai, UAE"}</span>
+        {/* --- COLUMN 3: CONTACT --- */}
+        <div className="space-y-6">
+          <div>
+            <h3 className="text-xl font-bold font-serif">{t.contactTitle}</h3>
+            <div className="h-0.5 w-8 bg-white/30 mt-2 rounded-full" />
+          </div>
+          <ul className="space-y-4 text-sm text-rose-100/80">
+            <li className="flex items-start gap-3">
+              <div className="p-2 bg-white/10 rounded-full mt-[-2px]">
+                <MapPin className="text-pink-300" size={14} />
+              </div>
+              <span className="leading-tight">{data?.contactAddress || "Dubai, UAE"}</span>
             </li>
-            <li className="flex items-center gap-2">
-              <Phone className="text-pink-600" size={16} />
+            <li className="flex items-center gap-3">
+              <div className="p-2 bg-white/10 rounded-full">
+                <Phone className="text-pink-300" size={14} />
+              </div>
               <span>{data?.contactPhone || "+971 555 123456"}</span>
             </li>
-            <li className="flex items-center gap-2">
-              <Mail className="text-pink-600" size={16} />
+            <li className="flex items-center gap-3">
+              <div className="p-2 bg-white/10 rounded-full">
+                <Mail className="text-pink-300" size={14} />
+              </div>
               <span>{data?.contactEmail || "hello@marinawellness.com"}</span>
             </li>
           </ul>
         </div>
 
-        {/* Newsletter (Now Dynamic Text, Static Form) */}
-        <div className="space-y-4">
-          <h3 className="text-xl sm:text-2xl font-bold mb-3 relative after:content-[''] after:absolute after:w-10 after:h-[2px] after:bg-pink-500 after:bottom-0 after:left-0">
-            {data?.newsletterTitle || "Stay Mindful"}
-          </h3>
-          <p className="text-xs sm:text-sm opacity-80">
-            {data?.newsletterSubtitle || "Get weekly mindfulness tips and updates."}
+        {/* --- COLUMN 4: NEWSLETTER --- */}
+        <div className="space-y-6">
+          <div>
+            <h3 className="text-xl font-bold font-serif">
+              {data?.newsletterTitle || t.newsletterTitle}
+            </h3>
+            <div className="h-0.5 w-8 bg-white/30 mt-2 rounded-full" />
+          </div>
+          <p className="text-sm text-rose-100/70">
+            {data?.newsletterSubtitle || t.newsletterSubtitle}
           </p>
-          {/* This form is static for now, which is fine. */}
-          <form className="flex flex-col sm:flex-row gap-2 bg-white/20 rounded-lg overflow-hidden backdrop-blur-sm">
-            <input
-              type="email"
-              placeholder="Your email"
-              className="w-full p-2 sm:p-3 text-gray-800 bg-white/50 focus:outline-none text-xs sm:text-sm rounded"
-            />
+          
+          {/* Convex Glass Form */}
+          <form className="flex flex-col gap-3">
+            <div className="relative group">
+              <input
+                type="email"
+                placeholder={language === 'de' ? "Ihre E-Mail-Adresse" : "Your email address"}
+                className="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-xl text-sm text-white placeholder-rose-200/50 focus:outline-none focus:border-pink-400/50 focus:bg-black/30 transition-all"
+                style={{ boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.2)' }}
+              />
+            </div>
             <button
               type="submit"
-              className="w-full sm:w-auto px-4 sm:px-5 py-2 bg-pink-500 hover:bg-pink-600 transition-all text-white font-medium rounded text-xs sm:text-sm"
+              className="w-full py-3 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-400 hover:to-rose-400 text-white font-medium text-sm shadow-lg shadow-pink-900/20 hover:shadow-pink-500/30 hover:-translate-y-0.5 transition-all duration-300 flex items-center justify-center gap-2"
             >
-              Subscribe
+              {t.subscribe}
+              <ArrowRight size={14} />
             </button>
           </form>
         </div>
       </div>
 
-      <div className="relative border-t border-white/20 text-center py-4 text-xs sm:text-sm opacity-80">
-        <p>{data?.footerCopyright || `© ${new Date().getFullYear()} Marina Wellness. All Rights Reserved.`}</p>
-        {/* We add a check for the tagline */}
+      {/* BOTTOM BAR */}
+      <div className="relative border-t border-white/10 mt-12 pt-8 text-center">
+        <p className="text-xs text-rose-200/40 tracking-wide">
+          {data?.footerCopyright || `© ${new Date().getFullYear()} Marina Wellness. ${t.rights}`}
+        </p>
         {data?.footerTagline && (
-          <p className="mt-1 text-pink-600">{data.footerTagline}</p>
+          <p className="mt-2 text-sm font-['Playfair_Display'] italic text-pink-300/80">
+            {getLocalizedText(data, 'footerTagline', language)}
+          </p>
         )}
       </div>
     </footer>

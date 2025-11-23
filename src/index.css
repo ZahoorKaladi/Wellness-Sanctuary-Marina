@@ -16,14 +16,15 @@ body {
   color: #222;
 }
 
-/* === FALLBACKS & ACCESSIBILITY === */
-@media (prefers-reduced-motion: reduce) {
-  * {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+
+
+  html {
+    scroll-behavior: auto;
   }
-
-
-}
-
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #888 transparent;
+  }
+  *::-webkit-scrollbar {
+    width: 8px;
+  }

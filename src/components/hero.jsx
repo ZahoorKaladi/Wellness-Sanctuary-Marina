@@ -1,160 +1,144 @@
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
+import { useLanguage } from "../context/languagecontext";
 
-// Constants - Optimized and fallback-enabled image URLs
-const HERO_IMAGE_MOBILE = "https://images.pexels.com/photos/6341545/pexels-photo-6341545.jpeg?auto=compress&cs=tinysrgb&w=600&h=800&fit=crop";
-const HERO_IMAGE_DESKTOP = "https://images.pexels.com/photos/6341545/pexels-photo-6341545.jpeg?auto=compress&cs=tinysrgb&w=1200&h=800&fit=crop";
-const FALLBACK_IMAGE_LOCAL = "https://via.placeholder.com/600x800?text=Fallback+Image";
+// Constants
+const HERO_IMAGE = "https://images.pexels.com/photos/6341545/pexels-photo-6341545.jpeg?auto=compress&cs=tinysrgb&w=1200&h=800&fit=crop";
 
-const content = [
-  "Finde deinen inneren Frieden",
-  "Heile durch Klang und Geist",
-  "Verbinde dich wieder mit deiner Seele",
-  "Transformiere täglich deine Energie",
-];
+// --- STATIC TRANSLATIONS ---
+const HERO_CONTENT = {
+  en: {
+    headlines: [
+      "Find your inner peace",
+      "Heal through Sound and Spirit",
+      "Reconnect with your Soul",
+      "Transform your energy daily",
+    ],
+    description: "Embrace emotional, mental, and spiritual well-being with mindful therapy and soulful guidance. Begin your transformation today.",
+    bookBtn: "Book Now",
+    podcastBtn: "Discover Podcasts"
+  },
+  de: {
+    headlines: [
+      "Finde deinen inneren Frieden",
+      "Heile durch Klang und Geist",
+      "Verbinde dich wieder mit deiner Seele",
+      "Transformiere täglich deine Energie",
+    ],
+    description: "Umarme emotionales, mentales und spirituelles Wohlbefinden mit achtsamer Therapie und gefühlvoller Führung. Beginne noch heute deine Transformation.",
+    bookBtn: "Jetzt Buchen",
+    podcastBtn: "Podcasts Entdecken"
+  }
+};
 
-// ----------------------------------------------------------------------
-// MAIN HERO COMPONENT - OPTIMIZED: Adjusted BG Zoom for Mobile
-// ----------------------------------------------------------------------
 const Hero = () => {
+  const { language } = useLanguage();
+  const t = HERO_CONTENT[language];
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [isMobile, setIsMobile] = useState(false);
-  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
-  const [imageLoaded, setImageLoaded] = useState(false);
-  const heroRef = useRef(null);
 
+  // Logic: Text Rotation Only (Removed heavy resize/mouse listeners)
   useEffect(() => {
     const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % content.length);
+      setCurrentIndex((prev) => (prev + 1) % t.headlines.length);
     }, 5000);
-    const checkDevice = () => setIsMobile(window.innerWidth <= 768);
-    const checkMotionPreference = () => {
-      const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-      setPrefersReducedMotion(mediaQuery.matches);
-      mediaQuery.addEventListener('change', (e) => setPrefersReducedMotion(e.matches));
-      return () => mediaQuery.removeEventListener('change', (e) => setPrefersReducedMotion(e.matches));
-    };
-    const img = new Image();
-    img.src = isMobile ? HERO_IMAGE_MOBILE : HERO_IMAGE_DESKTOP;
-    img.onload = () => setImageLoaded(true);
-    img.onerror = () => setImageLoaded(false);
-    checkDevice();
-    checkMotionPreference();
-    window.addEventListener('resize', checkDevice);
-    return () => {
-      clearInterval(interval);
-      window.removeEventListener('resize', checkDevice);
-    };
-  }, []);
-
-  const description = "Umarme emotionales, mentales und spirituelles Wohlbefinden mit achtsamer Therapie und gefühlvoller Führung. Beginne noch heute deine Transformation.";
-
-  const backgroundStyle = useMemo(() => {
-    const imageUrl = isMobile ? HERO_IMAGE_MOBILE : HERO_IMAGE_DESKTOP;
-    return {
-      backgroundImage: `url('${imageLoaded ? imageUrl : FALLBACK_IMAGE_LOCAL}')`,
-      backgroundAttachment: prefersReducedMotion || isMobile ? 'scroll' : 'fixed',
-      backgroundPosition: 'center',
-      backgroundSize: isMobile ? 'contain' : 'cover', // Contain on mobile to show full image
-      backgroundRepeat: 'no-repeat',
-      transition: 'background-position 0.4s ease-out',
-    };
-  }, [isMobile, prefersReducedMotion, imageLoaded]);
-
-  const handleMouseMove = (e) => {
-    if (!prefersReducedMotion && heroRef.current) {
-      const rect = heroRef.current.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      heroRef.current.style.backgroundPosition = `${50 + (x / rect.width - 0.5) * 10}% ${50 + (y / rect.height - 0.5) * 10}%`;
-    }
-  };
-
-  // Debug log for background style
-  useEffect(() => {
-    if (heroRef.current) {
-      console.log('Applied background style:', heroRef.current.style);
-    }
-  }, [backgroundStyle]);
+    return () => clearInterval(interval);
+  }, [t.headlines.length]);
 
   return (
     <section
-      ref={heroRef}
-      className="relative min-h-[85vh] sm:min-h-screen flex items-center justify-center text-center text-white px-4 sm:px-6 lg:px-8 overflow-hidden font-poppins"
-      style={backgroundStyle}
-      onMouseMove={handleMouseMove}
-      onTouchMove={handleMouseMove}
+      className="relative min-h-[85vh] sm:min-h-screen flex items-center justify-center text-center px-4 sm:px-6 lg:px-8 overflow-hidden bg-cover bg-center bg-no-repeat bg-fixed"
+      style={{
+        backgroundImage: `url('${HERO_IMAGE}')`,
+        // Mobile fallback for 'fixed' background which can be jittery on phones
+        backgroundAttachment: 'fixed', 
+      }}
     >
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/5 z-0 pointer-events-none" />
-      {!prefersReducedMotion && (
-        <div className="absolute inset-0 overflow-hidden z-[5] pointer-events-none">
-          {[...Array(isMobile ? 4 : 8)].map((_, i) => (
-            <motion.span
-              key={i}
-              className="absolute w-1 h-1 sm:w-2 sm:h-2 md:w-3 md:h-3 rounded-full bg-gradient-to-br from-pink-300/40 to-purple-400/40 blur-sm"
-              initial={{ x: `${Math.random() * 100}%`, y: `${Math.random() * 100}%`, opacity: 0.2, scale: 0.5 }}
-              animate={{ x: [null, `${Math.random() * 100}%`], y: [null, `${Math.random() * 100}%`], opacity: [0.1, 0.4, 0.1], scale: [0.5, 1.1, 0.5] }}
-              transition={{ duration: 15 + Math.random() * 10, repeat: Infinity, ease: "easeInOut", delay: Math.random() * 2 }}
-            />
-          ))}
-        </div>
-      )}
+      {/* 1. Soft Overlay */}
+      <div className="absolute inset-0 bg-gradient-to-b from-rose-900/20 via-transparent to-rose-900/20 z-0 pointer-events-none" />
+      
+      {/* 2. Ambient Light Blobs - Reduced Blur Radius for Performance */}
+      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-[1]">
+          <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] bg-pink-300/20 rounded-full blur-[80px] mix-blend-screen opacity-70" />
+          <div className="absolute bottom-[-10%] right-[-10%] w-[50vw] h-[50vw] bg-purple-300/20 rounded-full blur-[80px] mix-blend-screen opacity-70" />
+      </div>
+
+      {/* 3. MAIN CONVEX GLASS CARD */}
       <motion.div
-        className="relative z-10 w-full max-w-sm sm:max-w-2xl md:max-w-4xl mx-auto bg-black/20 backdrop-blur-sm rounded-3xl shadow-2xl border border-pink-200/40 p-6 sm:p-8 md:p-12 ring-2 ring-pink-300/30"
-        initial={{ opacity: 0, y: 40, scale: 0.95 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ duration: prefersReducedMotion ? 0.6 : 1.5, ease: "easeOut", type: "spring", stiffness: 80 }}
-        whileHover={{ boxShadow: "0 0 60px rgba(212, 163, 163, 0.6)" }}
+        className="relative z-10 w-full max-w-sm sm:max-w-2xl md:max-w-4xl mx-auto 
+                   bg-white/1 backdrop-blur-lg rounded-[2.5rem] 
+                   border border-pink-300/50 p-8 sm:p-12 md:p-16"
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 1, ease: "easeOut" }}
+        style={{
+          // Optimized "Convex" Glass Effect (Simpler Shadows)
+          boxShadow: `
+            inset 0 0 0 1px rgba(255, 255, 255, 0.4), 
+            0 20px 50px rgba(0, 0, 0, 0.15)
+          `,
+        }}
       >
+        {/* Inner Shine - Simplified */}
+        <div className="absolute inset-0 bg-gradient-to-br from-white/40 to-transparent rounded-[2.5rem] pointer-events-none" />
+
         <AnimatePresence mode="wait">
           <motion.div
             key={currentIndex}
-            initial={{ opacity: 0, y: 30, rotateX: -15 }}
-            animate={{ opacity: 1, y: 0, rotateX: 0 }}
-            exit={{ opacity: 0, y: -30, rotateX: 15 }}
-            transition={{ duration: prefersReducedMotion ? 0.4 : 1, ease: "easeOut" }}
+            initial={{ opacity: 0, y: 10, filter: "blur(2px)" }}
+            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+            exit={{ opacity: 0, y: -10, filter: "blur(2px)" }}
+            transition={{ duration: 0.6 }}
+            className="relative z-20"
           >
             <h1
-              className="text-white font-semibold mb-4 sm:mb-6 leading-tight drop-shadow-2xl text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl break-words tracking-wide"
-              style={{ textShadow: "0 4px 15px rgba(0, 0, 0, 0.9)", fontFamily: "'Poppins', sans-serif" }}
+              className="font-['Playfair_Display'] font-bold mb-6 leading-tight 
+                         text-2xl sm:text-4xl md:text-5xl lg:text-6xl tracking-tight
+                         text-rose-950 drop-shadow-sm"
             >
-              {content[currentIndex]}
+              {t.headlines[currentIndex]}
             </h1>
+            
             <motion.p
-              className="text-white/95 max-w-xl mx-auto leading-relaxed px-1 sm:px-2 text-xs sm:text-sm md:text-base break-words font-light drop-shadow-lg"
+              className="text-rose-900/90 max-w-xl mx-auto leading-relaxed 
+                         text-sm sm:text-base md:text-lg font-medium"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: prefersReducedMotion ? 0 : 0.3, duration: prefersReducedMotion ? 0.4 : 1 }}
-              style={{ textShadow: "0 2px 8px rgba(0, 0, 0, 0.7)", fontFamily: "'Inter', sans-serif" }}
+              transition={{ delay: 0.2, duration: 0.6 }}
             >
-              {description}
+              {t.description}
             </motion.p>
           </motion.div>
         </AnimatePresence>
+
+        {/* BUTTONS */}
         <motion.div
-          className="flex flex-col sm:flex-row justify-center items-center gap-4 sm:gap-6 mt-8 sm:mt-10"
-          initial={{ opacity: 0, y: 40 }}
+          className="relative z-20 flex flex-col sm:flex-row justify-center items-center gap-4 sm:gap-6 mt-10"
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: prefersReducedMotion ? 0.4 : 1, delay: prefersReducedMotion ? 0 : 0.5 }}
+          transition={{ duration: 0.8, delay: 0.3 }}
         >
           <Link
             to="/sessionbooking"
-            className="w-full sm:w-auto px-6 py-3 sm:px-8 sm:py-4 bg-[#d4a3a3] hover:bg-[#c58989] text-white rounded-full font-medium shadow-xl hover:shadow-2xl hover:scale-[1.05] transform transition-all duration-300 text-xs sm:text-sm ring-2 ring-pink-300/50 drop-shadow-lg"
-            style={{ textShadow: "0 2px 5px rgba(0, 0, 0, 0.5)", fontFamily: "'Poppins', sans-serif" }}
+            className="group relative w-full sm:w-auto px-8 py-4 rounded-full overflow-hidden shadow-lg transition-transform duration-300 hover:-translate-y-1 bg-gradient-to-r from-rose-400 to-pink-500"
           >
-            Jetzt Buchen
+             <span className="relative text-white font-medium text-sm sm:text-base tracking-wide">
+               {t.bookBtn}
+             </span>
           </Link>
+
           <Link
             to="/ProgramsPage"
-            className="w-full sm:w-auto px-6 py-3 sm:px-8 sm:py-4 border-2 border-pink-300/70 text-white hover:bg-pink-900/20 hover:text-white rounded-full font-medium shadow-xl transition-all duration-300 text-xs sm:text-sm backdrop-blur-sm drop-shadow-lg"
-            style={{ textShadow: "0 2px 5px rgba(0, 0, 0, 0.5)", fontFamily: "'Poppins', sans-serif" }}
+            className="group relative w-full sm:w-auto px-8 py-4 rounded-full overflow-hidden transition-transform duration-300 hover:-translate-y-1
+                       bg-white/50 border border-white/60 backdrop-blur-md shadow-sm hover:bg-white/70"
           >
-            Podcasts Entdecken
+             <span className="relative text-rose-900 font-medium text-sm sm:text-base tracking-wide group-hover:text-pink-700 transition-colors">
+               {t.podcastBtn}
+             </span>
           </Link>
         </motion.div>
+
       </motion.div>
-      <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-b from-black/15 to-transparent z-5 pointer-events-none" />
     </section>
   );
 };

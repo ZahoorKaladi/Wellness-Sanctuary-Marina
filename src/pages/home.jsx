@@ -1,74 +1,62 @@
-// src/pages/home.jsx
-import React, { useState, useEffect } from 'react';
-import { client } from '../client'; // <-- IMPORT SANITY CLIENT
+// src/pages/Home.jsx
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
-// Import all your page sections
-import Hero from "../components/hero";
+// Import Optimized Components
+import Hero from "../components/hero"; // Ensure naming matches file
 import MissionSection from "../components/missionsection";
 import CounterSection from "../components/countersection";
 import ServicesSection from "../components/servicessection";
 import TestimonialCarousel from "../components/testimonialcarousel";
 import BlogSection from "../components/blogsection";
-import MiniAdBanner from "../components/productcarousel";
 
-// This one query professionally fetches all data for this page
-const homePageQuery = `
-{
-  "home": *[_type == "homePage"][0] {
-    missionTitle,
-    missionBio
-  },
-  "about": *[_type == "aboutPage"][0] {
-    profileImage
-  }
-}
-`;
 
 const Home = () => {
-  // Set up state to hold all your fetched data
-  const [pageData, setPageData] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
 
-  // Fetch the data when the page loads
-  useEffect(() => {
-    client.fetch(homePageQuery)
-      .then((data) => {
-        setPageData(data);
-        setIsLoading(false);
-      })
-      .catch((err) => {
-        console.error("Failed to fetch homepage data:", err);
-        setIsLoading(false); // Let components use their fallbacks
-      });
-  }, []); // The empty [] means this runs only once
+  // --- HANDLERS ---
+  // These are passed down to sections that have buttons needing navigation
+  const handleBookSession = () => {
+    navigate('/sessionbooking');
+  };
 
-  // --- THIS IS THE KEY ---
-  // We assemble the 'missionData' prop by combining
-  // data from both 'home' and 'about'
-  const missionData = {
-    missionTitle: pageData?.home?.missionTitle,
-    missionBio: pageData?.home?.missionBio,
-    profileImage: pageData?.about?.profileImage, // <-- Fetched from aboutPage
+  const handleExplorePodcasts = () => {
+    navigate('/programspage');
   };
 
   return (
-    <div>
-      <Hero /> 
+    <div className="relative w-full min-h-screen font-sans bg-rose-50/50 overflow-hidden">
       
-      {/* We pass the combined data down as a prop.
-        The MissionSection component will handle the loading state.
-      */}
-      <MissionSection 
-        missionData={missionData} 
-        isLoading={isLoading} 
-      />
+      {/* --- MASTER BACKGROUND --- */}
+      {/* This creates the seamless ambient light behind all glass sections */}
+      <div className="fixed inset-0 bg-gradient-to-br from-rose-50 via-white to-purple-50/30 -z-50 pointer-events-none" />
+      <div className="fixed top-0 left-0 w-[50vw] h-[50vw] bg-pink-300/10 rounded-full blur-[120px] -z-50 pointer-events-none" />
+      <div className="fixed bottom-0 right-0 w-[50vw] h-[50vw] bg-purple-300/10 rounded-full blur-[120px] -z-50 pointer-events-none" />
+
+      {/* --- PAGE CONTENT --- */}
+      <div className="relative z-10 flex flex-col gap-0">
+        
+        {/* 1. Hero */}
+        <Hero />
+
+        {/* 2. Mission (Self-fetching) */}
+        <MissionSection 
+          handleBookSession={handleBookSession}
+          handleExplorePodcasts={handleExplorePodcasts}
+        />
+        {/* 4. Blog Journal */}
+        <BlogSection />
+
+        {/* 5. Stats Counter */}
+        <CounterSection />
+
+        {/* 6. Services Grid */}
+        <ServicesSection />
+
+        {/* 7. Testimonials */}
+        <TestimonialCarousel />
       
-      <MiniAdBanner/>
-      <BlogSection/>
-      <CounterSection/>
-      <ServicesSection/>
-      <TestimonialCarousel/>
-   
+      </div>
     </div>
   );
 };

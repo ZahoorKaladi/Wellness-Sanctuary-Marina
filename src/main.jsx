@@ -6,12 +6,24 @@ import App from "./App";
 import "./index.css";
 import Layout from "./components/layout";
 import ScrollToTop from "./components/scrolltotop";
-ReactDOM.createRoot(document.getElementById("root")).render(
-  <BrowserRouter>
+import { LanguageProvider } from './context/languagecontext';
 
-    <Layout> {/* <-- Now, we wrap the App component with Layout */}
-      <App />
-      <ScrollToTop />
-    </Layout>
-  </BrowserRouter>
+ReactDOM.createRoot(document.getElementById("root")).render(
+  <React.StrictMode>
+    <BrowserRouter>
+      {/* 1. Provider MUST wrap Layout so Navbar can access it */}
+      <LanguageProvider>
+        
+        {/* 2. Helper utility */}
+        <ScrollToTop />
+        
+        {/* 3. Layout contains the Navbar */}
+        <Layout>
+          {/* 4. App contains the Pages */}
+          <App />
+        </Layout>
+
+      </LanguageProvider>
+    </BrowserRouter>
+  </React.StrictMode>
 );
