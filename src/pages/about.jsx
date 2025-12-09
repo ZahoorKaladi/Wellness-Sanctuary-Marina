@@ -7,9 +7,8 @@ import {
 } from 'lucide-react';
 import { client, urlFor } from '../client'; 
 
-// 1. Import Language Tools
 import { useLanguage } from '../context/languagecontext';
-import { getLocalizedText } from '../utils/sanityhelper'; // Ensure capitalization matches your file system (sanityHelper vs sanityhelper)
+import { getLocalizedText } from '../utils/sanityhelper';
 
 // --- ICON MAPPING ---
 const ICON_MAP = {
@@ -22,7 +21,7 @@ const ICON_MAP = {
   sparkles: Sparkles,
   zap: Zap,
   feather: Feather,
-  award: Award // Added Award icon
+  award: Award 
 };
 
 // --- STATIC TRANSLATIONS ---
@@ -37,10 +36,8 @@ const STATIC_TEXT = {
     btnProgram: "Explore Programs",
     pillarsTitle: "Pillars of Transformation",
     radioTitle: "A Credible Foundation: Broadcast & Radio",
-    // --- NEW SECTION TEXT ---
     certTitle: "Diplomas & Certifications",
     certSubtitle: "Registered qualifications and formal training",
-    // -----------------------
     journeyTitle: "The Transformative Power",
     ctaTitle: "Ready to find your inner calm?",
     ctaDesc: "Book a one-on-one session with Marina and experience a personalized transformation — intentional, supportive, and carefully guided.",
@@ -59,10 +56,8 @@ const STATIC_TEXT = {
     btnProgram: "Programme entdecken",
     pillarsTitle: "Säulen der Transformation",
     radioTitle: "Ein Fundament des Vertrauens: Radio & Broadcast",
-    // --- NEW SECTION TEXT ---
     certTitle: "Diplome & Zertifizierungen",
     certSubtitle: "Registrierte Qualifikationen und formale Ausbildung",
-    // -----------------------
     journeyTitle: "Die transformative Kraft",
     ctaTitle: "Bereit für innere Ruhe?",
     ctaDesc: "Buchen Sie eine persönliche Sitzung mit Marina und erleben Sie eine Transformation – achtsam, unterstützend und liebevoll geführt.",
@@ -86,7 +81,6 @@ const staticHeaderMessages = {
   ]
 };
 
-// --- QUERY (Updated to include Certificates) ---
 const query = `*[_type == "aboutPage"][0] {
   headerTaglines,
   headerTaglines_de,
@@ -103,13 +97,11 @@ const query = `*[_type == "aboutPage"][0] {
     description, description_de,
     iconKey
   },
-  // --- NEW FIELD ---
   certificates[] {
     title, title_de,
     description, description_de,
     certificateImage
   },
-  // ----------------
   journey1, journey1_de,
   journey2, journey2_de,
   journeyFinalNote, journeyFinalNote_de
@@ -152,7 +144,7 @@ const FeatureCard = ({ Icon, title, desc, delay }) => (
 );
 
 const AboutPage = () => {
-  const { language } = useLanguage(); // Hook into Language
+  const { language } = useLanguage(); 
   const t = STATIC_TEXT[language];
 
   const [headerIndex, setHeaderIndex] = useState(0);
@@ -172,7 +164,6 @@ const AboutPage = () => {
       });
   }, []);
 
-  // Determine Header Messages based on Language
   const headerMessages = (language === 'de' && data?.headerTaglines_de) 
     ? data.headerTaglines_de 
     : (data?.headerTaglines || staticHeaderMessages[language]);
@@ -182,12 +173,10 @@ const AboutPage = () => {
     return () => clearInterval(t);
   }, [headerMessages]);
 
-  // --- HELPER: Get Feature Data safely ---
   const getFeature = (key) => {
     const feat = data?.[key];
     if (!feat) return { title: "Title", description: "Description" };
     
-    // Manual localization check because feat is an object
     if (language === 'de' && data[`${key}_de`]) {
         return data[`${key}_de`];
     }
@@ -230,11 +219,14 @@ const AboutPage = () => {
              </span>
           </motion.div>
 
+          {/* --- FIX 1: Reduced Font Sizes for Hero Title --- */}
           <motion.h1
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, delay: 0.2 }}
-            className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-['Playfair_Display'] font-bold tracking-tight leading-tight text-white drop-shadow-lg"
+            // WAS: text-5xl ... lg:text-8xl
+            // NOW: text-4xl ... lg:text-6xl
+            className="text-4xl sm:text-5xl md:text-6xl lg:text-6xl font-['Playfair_Display'] font-bold tracking-tight leading-tight text-white drop-shadow-lg"
           >
             {t.heroTitle} <br/> <span className="text-transparent bg-clip-text bg-gradient-to-r from-rose-200 via-pink-300 to-white">{t.heroHighlight}</span>
           </motion.h1>
@@ -278,9 +270,12 @@ const AboutPage = () => {
 
       {/* --- PROFILE + MISSION --- */}
       <section className="relative -mt-24 z-20 pb-20">
-        <div className="max-w-6xl mx-auto px-6">
+        <div className="max-w-5xl mx-auto px-6"> {/* Reduced max-width for better containment */}
           <motion.div
-            className="relative rounded-[3rem] p-8 sm:p-12 md:p-16 overflow-hidden"
+            // --- FIX 2: Reduced Padding ---
+            // WAS: p-8 sm:p-12 md:p-16
+            // NOW: p-6 md:p-10
+            className="relative rounded-[3rem] p-6 md:p-10 overflow-hidden"
             initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -298,7 +293,7 @@ const AboutPage = () => {
             <div className="absolute top-0 right-0 w-96 h-96 bg-pink-300/20 rounded-full blur-[80px] -z-10" />
             <div className="absolute bottom-0 left-0 w-96 h-96 bg-purple-300/10 rounded-full blur-[80px] -z-10" />
 
-            <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
+            <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-12"> {/* Reduced Gap */}
               <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
                 whileInView={{ opacity: 1, scale: 1 }}
@@ -313,16 +308,19 @@ const AboutPage = () => {
                       : "https://images.pexels.com/photos/6919996/pexels-photo-6919996.jpeg?auto=format&fit=crop&q=90&w=600&h=600"
                   }
                   alt="Marina"
-                  className="relative z-10 w-64 h-64 sm:w-80 sm:h-80 rounded-full object-cover border-[8px] border-white shadow-2xl"
+                  // --- FIX 3: Reduced Image Size ---
+                  // WAS: w-64 h-64 sm:w-80 sm:h-80
+                  // NOW: w-48 h-48 md:w-64 md:h-64
+                  className="relative z-10 w-48 h-48 md:w-64 md:h-64 rounded-full object-cover border-[8px] border-white shadow-2xl"
                 />
               </motion.div>
 
               <div className="flex-1 text-center lg:text-left">
-                <h2 className="text-4xl sm:text-5xl font-['Playfair_Display'] font-bold text-rose-950 mb-6">
+                <h2 className="text-3xl sm:text-4xl font-['Playfair_Display'] font-bold text-rose-950 mb-4"> {/* Reduced header size */}
                   {t.aboutTitle} <span className="text-transparent bg-clip-text bg-gradient-to-r from-rose-500 to-pink-600">Marina</span>
                 </h2>
 
-                <p className="text-lg text-rose-900/80 leading-relaxed font-light mb-8">
+                <p className="text-base sm:text-lg text-rose-900/80 leading-relaxed font-light mb-6"> {/* Optimized font size */}
                   {getLocalizedText(data, 'profileBio', language)}
                 </p>
 
@@ -389,7 +387,6 @@ const AboutPage = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {(data?.radioHighlights || []).map((r, idx) => {
-              // Manual localization check for array items
               const title = (language === 'de' && r.title_de) ? r.title_de : r.title;
               const desc = (language === 'de' && r.description_de) ? r.description_de : r.description;
               const IconComponent = ICON_MAP[r.iconKey] || Mic; 
@@ -451,7 +448,6 @@ const AboutPage = () => {
                     transition={{ delay: 0.1 * idx, duration: 0.5 }}
                     className="flex flex-col bg-white rounded-3xl overflow-hidden shadow-sm border border-rose-100 hover:shadow-xl hover:shadow-rose-100/50 transition-all duration-300"
                   >
-                    {/* Certificate Image */}
                     <div className="h-56 w-full bg-gray-50 relative overflow-hidden group">
                       {cert.certificateImage ? (
                         <img 
@@ -467,7 +463,6 @@ const AboutPage = () => {
                       <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                     </div>
 
-                    {/* Content */}
                     <div className="p-8 flex-1 flex flex-col">
                       <h4 className="text-lg font-bold text-rose-900 mb-2 leading-tight">
                         {title}
@@ -484,7 +479,6 @@ const AboutPage = () => {
           </div>
         </section>
       )}
-      {/* --- END NEW SECTION --- */}
 
       {/* --- JOURNEY SECTION --- */}
       <section className="py-20 bg-rose-900 text-rose-50 relative overflow-hidden">
