@@ -3,13 +3,13 @@ import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { 
-  Mic, Video, Heart, Sparkles, Zap, Feather, ArrowRight, BookOpen, Utensils, Radio 
+  Mic, Video, Heart, Sparkles, Zap, Feather, ArrowRight, BookOpen, Utensils, Radio, Award 
 } from 'lucide-react';
 import { client, urlFor } from '../client'; 
 
 // 1. Import Language Tools
 import { useLanguage } from '../context/languagecontext';
-import { getLocalizedText } from '../utils/sanityhelper';
+import { getLocalizedText } from '../utils/sanityhelper'; // Ensure capitalization matches your file system (sanityHelper vs sanityhelper)
 
 // --- ICON MAPPING ---
 const ICON_MAP = {
@@ -21,7 +21,8 @@ const ICON_MAP = {
   heart: Heart,
   sparkles: Sparkles,
   zap: Zap,
-  feather: Feather
+  feather: Feather,
+  award: Award // Added Award icon
 };
 
 // --- STATIC TRANSLATIONS ---
@@ -36,6 +37,10 @@ const STATIC_TEXT = {
     btnProgram: "Explore Programs",
     pillarsTitle: "Pillars of Transformation",
     radioTitle: "A Credible Foundation: Broadcast & Radio",
+    // --- NEW SECTION TEXT ---
+    certTitle: "Diplomas & Certifications",
+    certSubtitle: "Registered qualifications and formal training",
+    // -----------------------
     journeyTitle: "The Transformative Power",
     ctaTitle: "Ready to find your inner calm?",
     ctaDesc: "Book a one-on-one session with Marina and experience a personalized transformation — intentional, supportive, and carefully guided.",
@@ -54,6 +59,10 @@ const STATIC_TEXT = {
     btnProgram: "Programme entdecken",
     pillarsTitle: "Säulen der Transformation",
     radioTitle: "Ein Fundament des Vertrauens: Radio & Broadcast",
+    // --- NEW SECTION TEXT ---
+    certTitle: "Diplome & Zertifizierungen",
+    certSubtitle: "Registrierte Qualifikationen und formale Ausbildung",
+    // -----------------------
     journeyTitle: "Die transformative Kraft",
     ctaTitle: "Bereit für innere Ruhe?",
     ctaDesc: "Buchen Sie eine persönliche Sitzung mit Marina und erleben Sie eine Transformation – achtsam, unterstützend und liebevoll geführt.",
@@ -77,7 +86,7 @@ const staticHeaderMessages = {
   ]
 };
 
-// --- QUERY (Updated for Multi-Language) ---
+// --- QUERY (Updated to include Certificates) ---
 const query = `*[_type == "aboutPage"][0] {
   headerTaglines,
   headerTaglines_de,
@@ -94,6 +103,13 @@ const query = `*[_type == "aboutPage"][0] {
     description, description_de,
     iconKey
   },
+  // --- NEW FIELD ---
+  certificates[] {
+    title, title_de,
+    description, description_de,
+    certificateImage
+  },
+  // ----------------
   journey1, journey1_de,
   journey2, journey2_de,
   journeyFinalNote, journeyFinalNote_de
@@ -387,7 +403,7 @@ const AboutPage = () => {
                   className="group bg-white/40 backdrop-blur-md border border-white/60 p-8 rounded-[2rem] shadow-sm hover:shadow-lg hover:shadow-pink-100 transition-all duration-300 hover:-translate-y-1"
                 >
                   <div className="w-14 h-14 rounded-2xl bg-rose-100 flex items-center justify-center mb-6 group-hover:bg-rose-200 transition-colors">
-                     <IconComponent className="w-7 h-7 text-rose-600" strokeWidth={1.5} />
+                      <IconComponent className="w-7 h-7 text-rose-600" strokeWidth={1.5} />
                   </div>
 
                   <h4 className="text-xl font-bold text-rose-900 mb-2">{title || "Untitled"}</h4>
@@ -405,6 +421,70 @@ const AboutPage = () => {
           </div>
         </div>
       </section>
+
+      {/* --- NEW SECTION: DIPLOMAS & CERTIFICATES --- */}
+      {data?.certificates && data.certificates.length > 0 && (
+        <section className="py-20 bg-rose-50/50">
+          <div className="max-w-7xl mx-auto px-6">
+            <div className="text-center mb-16">
+              <div className="inline-flex items-center justify-center p-3 bg-rose-100 rounded-full mb-4">
+                 <Award className="w-6 h-6 text-rose-600" />
+              </div>
+              <h3 className="text-3xl sm:text-4xl font-['Playfair_Display'] font-bold text-rose-950 mb-2">
+                {t.certTitle}
+              </h3>
+              <p className="text-rose-800/60 font-medium max-w-2xl mx-auto">
+                {t.certSubtitle}
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {data.certificates.map((cert, idx) => {
+                const title = (language === 'de' && cert.title_de) ? cert.title_de : cert.title;
+                const desc = (language === 'de' && cert.description_de) ? cert.description_de : cert.description;
+
+                return (
+                  <motion.div
+                    key={idx}
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    whileInView={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.1 * idx, duration: 0.5 }}
+                    className="flex flex-col bg-white rounded-3xl overflow-hidden shadow-sm border border-rose-100 hover:shadow-xl hover:shadow-rose-100/50 transition-all duration-300"
+                  >
+                    {/* Certificate Image */}
+                    <div className="h-56 w-full bg-gray-50 relative overflow-hidden group">
+                      {cert.certificateImage ? (
+                        <img 
+                          src={urlFor(cert.certificateImage).width(600).height(400).url()} 
+                          alt={title}
+                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-rose-200">
+                          <Award size={48} strokeWidth={1} />
+                        </div>
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    </div>
+
+                    {/* Content */}
+                    <div className="p-8 flex-1 flex flex-col">
+                      <h4 className="text-lg font-bold text-rose-900 mb-2 leading-tight">
+                        {title}
+                      </h4>
+                      <div className="w-12 h-1 bg-rose-200 rounded-full mb-4" />
+                      <p className="text-sm text-rose-700/70 leading-relaxed">
+                        {desc}
+                      </p>
+                    </div>
+                  </motion.div>
+                )
+              })}
+            </div>
+          </div>
+        </section>
+      )}
+      {/* --- END NEW SECTION --- */}
 
       {/* --- JOURNEY SECTION --- */}
       <section className="py-20 bg-rose-900 text-rose-50 relative overflow-hidden">
