@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Star, Quote, ChevronLeft, ChevronRight } from 'lucide-react';
 import { client } from '../client';
 import { useLanguage } from "../context/languagecontext";
-import { getLocalizedText } from "../utils/sanityHelper";
+import { getLocalizedText } from "../utils/sanityhelper";
 
 // --- STATIC TRANSLATIONS ---
 const STATIC_TEXT = {

@@ -6,7 +6,7 @@ import { client as readClient } from '../client';
 
 // 1. Import Language Tools
 import { useLanguage } from "../context/languagecontext";
-import { getLocalizedText } from "../utils/sanityHelper";
+import { getLocalizedText } from "../utils/sanityhelper";
 
 // --- STATIC TRANSLATIONS ---
 const STATIC_TEXT = {
