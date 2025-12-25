@@ -29,6 +29,11 @@ const STATIC_TEXT = {
       type: "Select Session Type",
       date: "Preferred Date & Time"
     },
+    // --- NEW LEGAL TEXT ---
+    legal: {
+        text: "I have read and agree to the ",
+        link: "Privacy Policy (Datenschutzerklärung)"
+    },
     placeholders: {
       name: "Jane Doe",
       phone: "+1 234 567 890",
@@ -71,6 +76,11 @@ const STATIC_TEXT = {
       email: "E-Mail-Adresse",
       type: "Sitzungstyp wählen",
       date: "Wunschtermin & Zeit"
+    },
+    // --- NEW LEGAL TEXT (German) ---
+    legal: {
+        text: "Ich habe die ",
+        link: "Datenschutzerklärung gelesen und akzeptiere sie"
     },
     placeholders: {
       name: "Max Mustermann",
@@ -146,6 +156,9 @@ const SessionBookingPage = () => {
   const [submitError, setSubmitError] = useState(null);
   const [pageData, setPageData] = useState(null);
   const [headerIndex, setHeaderIndex] = useState(0);
+  
+  // --- NEW STATE: Privacy Agreement ---
+  const [agreed, setAgreed] = useState(false);
 
   useEffect(() => {
     readClient.fetch(query)
@@ -187,6 +200,7 @@ const SessionBookingPage = () => {
 
       setSubmissionStatus("success");
       setFormData({ name: "", email: "", phone: "", sessionType: therapySessionTypes[0].key, dateTime: "" });
+      setAgreed(false); // Reset checkbox
 
     } catch (error) {
       console.error("Error booking session:", error);
@@ -387,12 +401,36 @@ const SessionBookingPage = () => {
                     />
                 </motion.div>
 
+                {/* --- NEW LEGAL COMPLIANCE CHECKBOX --- */}
+                <motion.div variants={itemVariants} className="flex items-start gap-3 p-4 bg-white/40 rounded-xl border border-rose-100">
+                    <input 
+                        type="checkbox"
+                        id="privacy-agree"
+                        required
+                        checked={agreed}
+                        onChange={(e) => setAgreed(e.target.checked)}
+                        className="mt-1 w-5 h-5 rounded border-rose-300 text-rose-600 focus:ring-rose-500 cursor-pointer"
+                    />
+                    <label htmlFor="privacy-agree" className="text-sm text-rose-900 cursor-pointer">
+                        {t.legal.text} 
+                        <a 
+                            href="/datenschutzerklaerung" 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="font-bold underline text-rose-700 hover:text-rose-900"
+                        >
+                            {t.legal.link}
+                        </a>
+                    </label>
+                </motion.div>
+
                 <motion.button
                     type="submit"
-                    className="w-full py-4 bg-gradient-to-r from-rose-500 to-pink-500 text-white rounded-xl font-bold text-lg shadow-lg shadow-rose-500/30 hover:shadow-rose-500/50 transition-all duration-300 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                    disabled={submissionStatus === "submitting"}
-                    whileHover={submissionStatus !== "submitting" ? { scale: 1.02 } : {}}
-                    whileTap={submissionStatus !== "submitting" ? { scale: 0.98 } : {}}
+                    className="w-full py-4 bg-gradient-to-r from-rose-500 to-pink-500 text-white rounded-xl font-bold text-lg shadow-lg shadow-rose-500/30 hover:shadow-rose-500/50 transition-all duration-300 disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    // DISABLED IF: Submitting OR Not Agreed
+                    disabled={submissionStatus === "submitting" || !agreed}
+                    whileHover={submissionStatus !== "submitting" && agreed ? { scale: 1.02 } : {}}
+                    whileTap={submissionStatus !== "submitting" && agreed ? { scale: 0.98 } : {}}
                 >
                     {submissionStatus === "submitting" ? (
                         <>
