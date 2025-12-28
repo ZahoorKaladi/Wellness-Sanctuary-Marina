@@ -487,7 +487,7 @@ const SessionBookingPage = () => {
                     </div>
                     <div>
                       <h4 className="font-bold text-rose-900 text-sm mb-1">{t.infoLabels.phone}</h4>
-                      <p className="text-rose-800/80 text-xs">{pageData?.contactPhone || "+92 300 1234567"}</p>
+                      <p className="text-rose-800/80 text-xs">{pageData?.contactPhone || "+436642684730"}</p>
                     </div>
                   </li>
 
@@ -497,7 +497,7 @@ const SessionBookingPage = () => {
                     </div>
                     <div>
                       <h4 className="font-bold text-rose-900 text-sm mb-1">{t.infoLabels.email}</h4>
-                      <p className="text-rose-800/80 text-xs">{pageData?.contactEmail || "healing@serenity.com"}</p>
+                      <p className="text-rose-800/80 text-xs">{pageData?.contactEmail || "marina.gazmagomadova@hotmail"}</p>
                     </div>
                   </li>
 
