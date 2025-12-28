@@ -413,7 +413,7 @@ const ContactUs = () => {
                     <div>
                       <h4 className="font-bold text-rose-900 text-lg mb-1">{t.info.email}</h4>
                       <p className="text-rose-800/80 text-sm">
-                        {pageData?.email || "marina.gazmagomadova@hotmail.com"}
+                        {pageData?.email || "marina.gazmagomadova@hotmail"}
                       </p>
                     </div>
                   </motion.li>
