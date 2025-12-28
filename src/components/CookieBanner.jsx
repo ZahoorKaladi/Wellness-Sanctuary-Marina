@@ -5,88 +5,47 @@ import CookieConsent from "react-cookie-consent";
 const CookieBanner = () => {
   return (
     <CookieConsent
-      // FUNCTIONALITY
+      // --- FUNCTIONALITY ---
       location="bottom"
-      buttonText="Akzeptieren" // "Accept"
-      declineButtonText="Ablehnen" // "Decline"
+      buttonText="Akzeptieren"
+      declineButtonText="Ablehnen"
       enableDeclineButton
       cookieName="marina_wellness_consent"
       expires={150}
       
-      // CONTAINER STYLE (Clean White/Rose Theme)
-      style={{ 
-        background: "rgba(255, 255, 255, 0.98)", // Almost opaque white for readability
-        color: "#881337", // Rose-900 (Dark Red/Pink)
-        borderTop: "1px solid #ffe4e6", // Rose-200 (Subtle pink border)
-        boxShadow: "0 -4px 20px rgba(225, 29, 72, 0.05)", // Very soft rose shadow
-        padding: "10px 0",
-        alignItems: "center",
-        zIndex: 9999 // Ensure it stays on top of everything
-      }}
+      // --- LAYOUT & RESPONSIVENESS (The Fix) ---
+      // We use 'containerClasses' instead of 'style' to enable Tailwind's responsive power
+      containerClasses="flex flex-col md:flex-row items-center justify-between gap-4 p-6 md:px-10 fixed bottom-0 left-0 w-full z-[9999] bg-white/95 backdrop-blur-md border-t border-rose-100 shadow-[0_-10px_40px_rgba(225,29,72,0.05)] transition-all duration-300"
+      
+      // --- CONTENT WRAPPER ---
+      contentClasses="flex-1 text-center md:text-left mb-2 md:mb-0"
 
-      // PRIMARY BUTTON STYLE (Matches your "Book Session" buttons)
-      buttonStyle={{ 
-        background: "linear-gradient(135deg, #f43f5e 0%, #e11d48 100%)", // Rose-500 to Rose-600
-        color: "#fff", 
-        fontSize: "14px",
-        fontWeight: "bold",
-        borderRadius: "12px", // Soft rounded corners
-        padding: "12px 24px",
-        margin: "0 15px 0 0",
-        border: "none",
-        boxShadow: "0 4px 12px rgba(225, 29, 72, 0.25)", // Soft glow
-        cursor: "pointer",
-        transition: "all 0.2s ease"
-      }}
+      // --- BUTTONS (Mobile: Full Width | Desktop: Auto Width) ---
+      buttonWrapperClasses="flex flex-col sm:flex-row gap-3 w-full md:w-auto"
 
-      // SECONDARY BUTTON STYLE (Subtle Outline)
-      declineButtonStyle={{
-        background: "transparent",
-        color: "#9f1239", // Rose-800
-        border: "1px solid #fda4af", // Rose-300
-        borderRadius: "12px",
-        fontSize: "14px",
-        fontWeight: "500",
-        padding: "10px 20px",
-        margin: "0",
-        cursor: "pointer"
-      }}
+      // 1. ACCEPT BUTTON
+      buttonClasses="!bg-gradient-to-r !from-rose-500 !to-pink-600 !text-white !font-bold !text-sm !py-3 !px-6 !rounded-xl !shadow-lg !shadow-rose-500/20 hover:!shadow-rose-500/40 hover:!scale-[1.02] transition-all !m-0 w-full md:w-auto flex justify-center"
+      
+      // 2. DECLINE BUTTON
+      declineButtonClasses="!bg-transparent !border !border-rose-200 !text-rose-800 !font-medium !text-sm !py-3 !px-6 !rounded-xl hover:!bg-rose-50 transition-all !m-0 w-full md:w-auto flex justify-center"
+      
+      // Disable default inline styles so our Tailwind classes take priority
+      disableStyles={true} 
     >
-      <div style={{ maxWidth: "900px", margin: "0 auto", paddingRight: "20px" }}>
-        
-        {/* Branding Title */}
-        <div style={{ 
-          fontFamily: "'Playfair Display', serif", 
-          fontSize: "18px", 
-          fontWeight: "bold", 
-          color: "#881337", 
-          marginBottom: "4px",
-          display: "flex",
-          alignItems: "center",
-          gap: "8px"
-        }}>
-           <span>🍪</span> 
-           Wir verwenden Cookies
+      {/* --- TEXT CONTENT --- */}
+      <div className="max-w-2xl mx-auto md:mx-0">
+        <div className="flex items-center justify-center md:justify-start gap-2 mb-2">
+           <span className="text-xl">🍪</span> 
+           <h3 className="font-['Playfair_Display'] font-bold text-rose-900 text-lg">
+             Wir verwenden Cookies
+           </h3>
         </div>
 
-        {/* Description */}
-        <p style={{ 
-          fontSize: "13px", 
-          lineHeight: "1.5", 
-          margin: 0, 
-          color: "#4c0519", // Rose-950
-          opacity: 0.9 
-        }}>
-          Wir nutzen Cookies, um Ihnen die bestmögliche, personalisierte Erfahrung auf unserer Wellness-Website zu bieten.
+        <p className="text-sm text-rose-950/80 leading-relaxed">
+          Wir nutzen Cookies für eine bessere, personalisierte Wellness-Erfahrung.
           <a 
             href="/datenschutzerklaerung" 
-            style={{ 
-              color: "#e11d48", // Rose-600
-              marginLeft: "6px", 
-              textDecoration: "underline", 
-              fontWeight: "600",
-              cursor: "pointer"
-            }}
+            className="text-rose-600 font-semibold underline decoration-rose-300 underline-offset-2 hover:text-rose-800 ml-1 transition-colors"
           >
             Datenschutzerklärung lesen
           </a>.
