@@ -122,7 +122,7 @@ const ContactUs = () => {
     ? pageData.headerTaglines_de
     : (pageData?.headerTaglines || staticHeaderMessages[language]);
 
-  const mapAddress = pageData?.address || "Karachi, Sindh, Pakistan";
+  const mapAddress = pageData?.address || "Austria Ottokar-kernstock-Straße 13/1/3";
 
   useEffect(() => {
     // Reset index on language change
@@ -389,7 +389,7 @@ const ContactUs = () => {
                     <div>
                       <h4 className="font-bold text-rose-900 text-lg mb-1">{t.info.address}</h4>
                       <p className="text-rose-800/80 text-sm leading-relaxed">
-                        {pageData?.address || "123 Healthcare Road, Karachi, Sindh, Pakistan"}
+                        {pageData?.address || "Austria Ottokar-kernstock-Straße 13/1/3"}
                       </p>
                     </div>
                   </motion.li>
@@ -401,7 +401,7 @@ const ContactUs = () => {
                     <div>
                       <h4 className="font-bold text-rose-900 text-lg mb-1">{t.info.phone}</h4>
                       <p className="text-rose-800/80 text-sm">
-                        {pageData?.phone || "+92 21 1234567"}
+                        {pageData?.phone || "+436642684730"}
                       </p>
                     </div>
                   </motion.li>
@@ -413,7 +413,7 @@ const ContactUs = () => {
                     <div>
                       <h4 className="font-bold text-rose-900 text-lg mb-1">{t.info.email}</h4>
                       <p className="text-rose-800/80 text-sm">
-                        {pageData?.email || "info@marina.org"}
+                        {pageData?.email || "marina.gazmagomadova@hotmail.com"}
                       </p>
                     </div>
                   </motion.li>
@@ -425,7 +425,7 @@ const ContactUs = () => {
                     <div>
                       <h4 className="font-bold text-rose-900 text-lg mb-1">{t.info.hours}</h4>
                       <p className="text-rose-800/80 text-sm leading-relaxed">
-                        {getLocalizedText(pageData, 'hours', language) || "24/7 Emergency, OPD: 9 AM - 5 PM"}
+                        {getLocalizedText(pageData, 'hours', language) || "Therapy by Appointment Only, physical and online sessions available."}
                       </p>
                     </div>
                   </motion.li>
