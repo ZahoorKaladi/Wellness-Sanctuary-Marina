@@ -20,13 +20,15 @@ const STATIC_TEXT = {
   }
 };
 
-// --- DATA QUERY ---
-const query = `*[_type == "featuredVideo"] | order(orderRank asc) {
+// --- DATA QUERY (Sorted by Newest First) ---
+// We fetch by _createdAt desc so index 0 is always the "Most Recent"
+const query = `*[_type == "featuredVideo"] | order(_createdAt desc) {
   _id,
   title,
   title_de,
   videoUrl,
-  thumbnail
+  thumbnail,
+  _createdAt
 }`;
 
 const triggerHaptic = () => {
@@ -94,6 +96,7 @@ const VideoCard = React.memo(({ data, isActive, scrollToCenter, language }) => {
         playPromise
           .then(() => setIsPlaying(true))
           .catch((error) => {
+            // Auto-play policy might block unmuted, but we start muted so it's usually fine
             console.log("Auto-play prevented:", error);
             setIsPlaying(false);
           });
@@ -101,7 +104,7 @@ const VideoCard = React.memo(({ data, isActive, scrollToCenter, language }) => {
     } else {
       video.pause();
       setIsPlaying(false);
-      video.currentTime = 0;
+      video.currentTime = 0; // Reset when scrolling away
     }
   }, [isActive]);
 
@@ -142,7 +145,6 @@ const VideoCard = React.memo(({ data, isActive, scrollToCenter, language }) => {
       
       <video
         ref={videoRef}
-        // FIX 1: Pass null if videoUrl is missing to prevent browser fetch error
         src={data.videoUrl || null}
         className={`absolute inset-0 w-full h-full object-cover ${isActive ? 'opacity-100' : 'opacity-0'}`}
         loop
@@ -151,7 +153,6 @@ const VideoCard = React.memo(({ data, isActive, scrollToCenter, language }) => {
         preload="metadata"
       />
 
-      {/* FIX 2: Check for thumbnail existence before rendering img src */}
       <img
         src={data.thumbnail ? urlFor(data.thumbnail).width(600).quality(80).url() : null}
         alt={data.title}
@@ -216,18 +217,62 @@ const FeatureReels = () => {
   const [videos, setVideos] = useState([]);
   const [activeIndex, setActiveIndex] = useState(0);
   const scrollContainerRef = useRef(null);
+  
+  // Ref to track if we have performed the initial "center scroll"
+  const hasCenteredRef = useRef(false);
 
+  // 1. FETCH & REORDER
   useEffect(() => {
-    client.fetch(query).then((data) => setVideos(data));
+    client.fetch(query).then((data) => {
+      if (!data || data.length === 0) return;
+
+      // ALGORITHM: Put the newest video (index 0) in the CENTER of the array
+      // [Old1, Newest, Old2]
+      const newest = data[0];
+      const others = data.slice(1);
+      
+      const middleIndex = Math.floor(data.length / 2); // Target index
+      
+      // Split others into two halves to balance the carousel
+      const splitPoint = Math.floor(others.length / 2); 
+      const firstHalf = others.slice(0, splitPoint);
+      const secondHalf = others.slice(splitPoint);
+
+      const reordered = [...firstHalf, newest, ...secondHalf];
+      
+      setVideos(reordered);
+      
+      // Set the active index to our calculated middle
+      // (This creates the logic for "Most recent in the middle")
+      setActiveIndex(firstHalf.length); 
+    });
   }, []);
 
-  // FIXED SCROLL LISTENER
+  // 2. AUTO-SCROLL TO CENTER ON LOAD
+  useEffect(() => {
+    if (videos.length > 0 && !hasCenteredRef.current && scrollContainerRef.current) {
+        // Find the index of the newest video (it's the one we placed in the middle)
+        // Or simply use the activeIndex state we set earlier
+        const targetIndex = activeIndex;
+
+        // Small timeout ensures DOM is fully painted with correct widths
+        setTimeout(() => {
+            scrollToCard(targetIndex, 'auto'); // 'auto' = instant jump (no animation) for initial load
+            hasCenteredRef.current = true;
+        }, 100);
+    }
+  }, [videos]); // Dependency on videos ensures this runs after fetch
+
+  // 3. SCROLL LISTENER (Standard Carousel Logic)
   useEffect(() => {
     const container = scrollContainerRef.current;
     if (!container || videos.length === 0) return;
 
     let timeout;
     const handleScroll = () => {
+      // Don't update active state during the initial programmatic scroll to prevent flicker
+      if (!hasCenteredRef.current) return;
+
       const center = container.scrollLeft + container.clientWidth / 2;
       const children = container.children;
       
@@ -256,21 +301,18 @@ const FeatureReels = () => {
     };
 
     container.addEventListener("scroll", onScroll, { passive: true });
-    
-    // Run once on mount
-    handleScroll();
-
     return () => container.removeEventListener("scroll", onScroll);
   }, [activeIndex, videos]); 
 
-  const scrollToCard = useCallback((index) => {
+  const scrollToCard = useCallback((index, behavior = 'smooth') => {
     const container = scrollContainerRef.current;
     if (!container) return;
     const children = container.children;
+    
     if (children[index]) {
       const child = children[index];
       const scrollLeft = child.offsetLeft - (container.clientWidth / 2) + (child.offsetWidth / 2);
-      container.scrollTo({ left: scrollLeft, behavior: 'smooth' });
+      container.scrollTo({ left: scrollLeft, behavior: behavior });
     }
   }, []);
 
@@ -298,9 +340,13 @@ const FeatureReels = () => {
 
         <div 
           ref={scrollContainerRef}
-          className="flex gap-6 overflow-x-auto w-full px-[7.5vw] sm:px-[calc(50%-14rem)] py-8 pb-12 snap-x snap-mandatory scrollbar-hide"
+          className="flex gap-6 overflow-x-auto w-full px-[50vw] sm:px-[calc(50%-14rem)] py-8 pb-12 snap-x snap-mandatory scrollbar-hide"
           style={{ scrollBehavior: 'smooth' }}
         >
+            {/* Padding Logic Fix: 
+               px-[50vw] ensures the first and last items can be scrolled exactly to the center 
+               without getting stuck on the edges.
+            */}
           {videos.map((video, index) => (
             <div key={video._id} className="snap-center shrink-0 flex items-center justify-center">
               <VideoCard 
