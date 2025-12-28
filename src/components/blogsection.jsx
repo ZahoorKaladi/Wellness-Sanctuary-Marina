@@ -1,4 +1,4 @@
-// app/src/components/BlogSection.jsx
+// src/components/BlogSection.jsx
 
 import React, { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
@@ -27,15 +27,16 @@ const STATIC_TEXT = {
   }
 };
 
-// --- QUERY (Updated for Multi-Language) ---
+// --- QUERY: Ensure Latest Posts Come First (desc order) ---
 const postQuery = `*[_type == "post"] | order(publishedAt desc)[0...6] {
   _id,
   title,
-  title_de,     // Fetch German Title
+  title_de,     
   excerpt,
-  excerpt_de,   // Fetch German Excerpt
+  excerpt_de,   
   mainImage,
-  "slug": slug.current
+  "slug": slug.current,
+  publishedAt
 }`;
 
 // --- SUB-COMPONENT: JOURNAL CARD ---
@@ -82,12 +83,10 @@ const JournalCard = ({ post, language }) => (
       {/* Content */}
       <div className="flex flex-col flex-1 p-6 md:p-8">
         <h3 className="font-serif text-xl md:text-2xl font-bold text-gray-900 leading-tight mb-3 group-hover:text-pink-600 transition-colors line-clamp-2">
-          {/* Dynamic Title */}
           {getLocalizedText(post, 'title', language)}
         </h3>
         
         <p className="text-gray-600/90 text-sm leading-relaxed line-clamp-3 mb-6 font-light">
-          {/* Dynamic Excerpt */}
           {getLocalizedText(post, 'excerpt', language)}
         </p>
 
@@ -108,13 +107,12 @@ const JournalCard = ({ post, language }) => (
 
 // --- MAIN COMPONENT ---
 const BlogSection = () => {
-  const { language } = useLanguage(); // Hook into language state
+  const { language } = useLanguage();
   const t = STATIC_TEXT[language];
 
   const [posts, setPosts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const scrollRef = useRef(null);
-  const [isPaused, setIsPaused] = useState(false);
 
   // Fetch Data
   useEffect(() => {
@@ -130,31 +128,6 @@ const BlogSection = () => {
       });
   }, []);
 
-  // --- AUTO PLAY LOGIC ---
-  useEffect(() => {
-    if (isLoading || isPaused || posts.length === 0) return;
-
-    const autoScroll = () => {
-      if (scrollRef.current) {
-        const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
-        
-        // Check if we are near the end
-        const isAtEnd = scrollLeft + clientWidth >= scrollWidth - 10;
-
-        if (isAtEnd) {
-          // Smoothly scroll back to start
-          scrollRef.current.scrollTo({ left: 0, behavior: 'smooth' });
-        } else {
-          const scrollAmount = clientWidth < 768 ? clientWidth * 0.85 : clientWidth / 3; 
-          scrollRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
-        }
-      }
-    };
-
-    const interval = setInterval(autoScroll, 4000); // Change every 4 seconds
-    return () => clearInterval(interval);
-  }, [isLoading, isPaused, posts.length]);
-
   return (
     <section className="relative py-20 lg:py-32 overflow-hidden bg-white/0">
       
@@ -163,14 +136,14 @@ const BlogSection = () => {
       <div className="absolute top-20 left-0 w-[30rem] h-[30rem] bg-pink-300/10 rounded-full blur-[100px] pointer-events-none mix-blend-multiply" />
       <div className="absolute bottom-20 right-0 w-[30rem] h-[30rem] bg-purple-300/10 rounded-full blur-[100px] pointer-events-none mix-blend-multiply" />
 
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl relative z-10">
+      <div className="container mx-auto max-w-7xl relative z-10">
         
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center mb-12 sm:mb-20"
+          className="text-center mb-12 sm:mb-20 px-4"
         >
           <h2 className="text-4xl sm:text-5xl lg:text-6xl font-serif font-bold tracking-tight mb-4">
             <span className="bg-gradient-to-r from-rose-900 via-pink-600 to-purple-700 bg-clip-text text-transparent">
@@ -190,16 +163,16 @@ const BlogSection = () => {
         ) : posts.length === 0 ? (
           <p className="text-center text-gray-400 italic">{t.empty}</p>
         ) : (
-          <div 
-            className="relative"
-            onMouseEnter={() => setIsPaused(true)}
-            onMouseLeave={() => setIsPaused(false)}
-            onTouchStart={() => setIsPaused(true)}
-          >
-            {/* AUTO-SCROLL CONTAINER */}
+          <div className="relative w-full">
+            {/* LAYOUT EXPLANATION:
+               1. Mobile Centering: We use `px-[7.5vw]` padding. 
+                  - Math: (100vw Screen - 85vw Card) / 2 = 7.5vw.
+                  - This ensures the FIRST card (Latest) sits exactly in the middle.
+               2. Desktop: Standard centering with `sm:px-6`.
+            */}
             <div 
               ref={scrollRef}
-              className="flex overflow-x-auto snap-x snap-mandatory gap-6 pb-12 -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-hide"
+              className="flex overflow-x-auto snap-x snap-mandatory gap-6 pb-12 px-[7.5vw] sm:px-6 lg:px-8 scrollbar-hide"
               style={{ scrollBehavior: 'smooth' }}
             >
               {posts.map((post, index) => (
@@ -209,13 +182,15 @@ const BlogSection = () => {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: index * 0.1 }}
+                  // Card Width: 85vw on Mobile, Fixed sizes on Desktop
                   className="snap-center shrink-0 w-[85vw] sm:w-[22rem] lg:w-[24rem] h-auto flex"
                 >
                   <JournalCard post={post} language={language} />
                 </motion.div>
               ))}
               
-              <div className="shrink-0 w-4 sm:w-0" />
+              {/* Spacer at the end for smooth scrolling */}
+              <div className="shrink-0 w-[7.5vw] sm:w-6 lg:w-8" />
             </div>
           </div>
         )}
