@@ -234,7 +234,7 @@ const AboutPage = () => {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, delay: 0.2 }}
-            className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-['Playfair_Display'] font-bold tracking-tight leading-tight text-white drop-shadow-lg"
+            className="text-4xl sm:text-5xl md:text-6xl font-['Playfair_Display'] font-bold tracking-tight leading-tight text-white drop-shadow-lg"
           >
             {t.heroTitle} <br/> <span className="text-transparent bg-clip-text bg-gradient-to-r from-rose-200 via-pink-300 to-white">{t.heroHighlight}</span>
           </motion.h1>
@@ -254,25 +254,7 @@ const AboutPage = () => {
             </AnimatePresence>
           </div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.8 }}
-            className="flex flex-col sm:flex-row gap-4 justify-center items-center mt-4"
-          >
-            <Link
-              to="/sessionbooking"
-              className="px-8 py-4 bg-white text-rose-900 font-bold rounded-full shadow-[0_0_20px_rgba(255,255,255,0.3)] hover:shadow-[0_0_30px_rgba(255,255,255,0.5)] hover:scale-105 transition-all duration-300"
-            >
-              {t.btnBook}
-            </Link>
-            <Link
-              to="/service"
-              className="px-8 py-4 bg-white/10 border border-white/30 backdrop-blur-sm text-white font-medium rounded-full hover:bg-white/20 transition-all duration-300"
-            >
-              {t.btnOffer}
-            </Link>
-          </motion.div>
+          
         </div>
       </header>
 
